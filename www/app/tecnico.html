@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <title>Mesa de Trabajo - TechFix</title>
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col lg:flex-row">
+
+    <aside class="w-full lg:w-64 bg-base-100 shadow-md flex flex-col justify-between hidden lg:flex">
+        <div>
+            <div class="p-6 text-center text-2xl font-black border-b border-base-200 text-primary">
+                TECH<span class="text-base-content">FIX</span> <span class="text-xs block text-gray-400 font-normal">TALLER</span>
+            </div>
+            
+            <ul class="menu w-full p-4 gap-2 text-base">
+                <li><a class="active bg-primary text-primary-content" href="tecnico.html">Mis Reparaciones</a></li>
+                <li><a href="#">Nueva Recepción (Crear Orden)</a></li>
+                <li><a href="#">Punto de Venta (Cobrar)</a></li>
+                <li><a href="#">Mi Corte de Caja</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-base-200">
+            <button class="btn btn-error btn-outline w-full" id="btnLogout">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <div class="navbar bg-base-100 shadow-sm px-6 justify-between">
+            <span class="text-xl font-bold">Mesa de Trabajo</span>
+            <span class="font-medium text-primary">Turno Abierto</span>
+        </div>
+
+        <main class="p-6 flex-1 overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="card bg-base-100 shadow-sm border border-base-200">
+                    <div class="card-body flex-row items-center justify-between">
+                        <div>
+                            <h2 class="card-title text-gray-500 text-sm">Mis Equipos Pendientes</h2>
+                            <p class="text-4xl font-bold text-warning">0</p>
+                        </div>
+                        <button class="btn btn-primary">Ver Lista</button>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-sm border border-base-200">
+                    <div class="card-body flex-row items-center justify-between">
+                        <div>
+                            <h2 class="card-title text-gray-500 text-sm">Equipos Listos para Entrega</h2>
+                            <p class="text-4xl font-bold text-success">0</p>
+                        </div>
+                        <button class="btn btn-outline">Cobrar Equipo</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
