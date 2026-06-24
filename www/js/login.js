@@ -5,7 +5,7 @@ const password = document.querySelector("#password_field");
 button.addEventListener("click", e => {
   e.preventDefault();
   
-  fetch("../php/users.php", {
+  fetch("php/users.php", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -17,15 +17,14 @@ button.addEventListener("click", e => {
     })
   })
   .then(res => res.json())
-  .then(json => {
+.then(json => {
     if (json.status === "success") {
-
-      localStorage.setItem("user", JSON.stringify(json.data));
+      sessionStorage.setItem("techfix_user", JSON.stringify(json.data));
       
       if(json.data.id_role === 1) {
-          window.location.href = "../sales/"; // Vista de administrador/órdenes
+          window.location.href = "app/admin.html"; 
       } else {
-          window.location.href = "../repair_orders/"; // Vista de técnico
+          window.location.href = "app/tecnico.html"; 
       }
     } else {
       alert("Credenciales incorrectas.");

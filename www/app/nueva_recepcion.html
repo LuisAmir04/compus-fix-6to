@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <title>Nueva Recepción - TechFix</title>
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col lg:flex-row">
+
+    <aside class="w-full lg:w-64 bg-base-100 shadow-md flex flex-col justify-between hidden lg:flex">
+        <div>
+            <div class="p-6 text-center text-2xl font-black border-b border-base-200 text-primary">
+                TECH<span class="text-base-content">FIX</span> <span class="text-xs block text-gray-400 font-normal">TALLER</span>
+            </div>
+            
+            <ul class="menu w-full p-4 gap-2 text-base">
+                <li><a href="tecnico.html">Mis Reparaciones</a></li>
+                <li><a class="active bg-primary text-primary-content" href="nueva_recepcion.html">Nueva Recepción (Crear Orden)</a></li>
+                <li><a href="corte_caja.html">Mi Corte de Caja</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-base-200">
+            <button class="btn btn-error btn-outline w-full" onclick="window.location.href='../index.html'">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <div class="navbar bg-base-100 shadow-sm px-6 justify-between">
+            <span class="text-xl font-bold">Recepción de Equipo</span>
+            <span class="font-medium text-primary" id="userNameDisplay">Técnico</span>
+        </div>
+
+        <main class="p-6 flex-1 overflow-y-auto">
+            <div class="card bg-base-100 shadow-sm border border-base-200 max-w-4xl mx-auto">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl mb-4">Datos del Servicio</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-bold">Nombre del Cliente *</span></label>
+                            <input type="text" id="f-cname" placeholder="Ej. Juan Pérez" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-bold">Teléfono *</span></label>
+                            <input type="text" id="f-cphone" placeholder="10 dígitos" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full md:col-span-2">
+                            <label class="label"><span class="label-text font-bold">Correo (Opcional)</span></label>
+                            <input type="email" id="f-cemail" placeholder="cliente@correo.com" class="input input-bordered w-full" />
+                        </div>
+
+                        <div class="divider md:col-span-2">Dispositivo y Falla</div>
+
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-bold">Tipo de Dispositivo *</span></label>
+                            <select id="f-dtype" class="select select-bordered w-full">
+                                <option disabled selected value="">Selecciona uno...</option>
+                                </select>
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-bold">Tipo de Servicio *</span></label>
+                            <select id="f-stype" class="select select-bordered w-full">
+                                <option disabled selected value="">Selecciona uno...</option>
+                                </select>
+                        </div>
+                        <div class="form-control w-full md:col-span-2">
+                            <label class="label"><span class="label-text font-bold">Marca y Modelo *</span></label>
+                            <input type="text" id="f-brand" placeholder="Ej. Lenovo Thinkpad X1 Yoga" class="input input-bordered w-full" />
+                        </div>
+                        <div class="form-control w-full md:col-span-2">
+                            <label class="label"><span class="label-text font-bold">Falla Reportada *</span></label>
+                            <textarea id="f-fault" class="textarea textarea-bordered h-24" placeholder="Describe lo que dice el cliente..."></textarea>
+                        </div>
+                        <div class="form-control w-full md:col-span-2">
+                            <label class="label"><span class="label-text font-bold">Presupuesto Inicial Estimado ($)</span></label>
+                            <input type="number" id="f-price" placeholder="0.00" class="input input-bordered w-full" />
+                        </div>
+                    </div>
+
+                    <div class="card-actions justify-end mt-6">
+                        <button class="btn btn-primary" id="btn-guardar">Registrar Orden</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+
+        const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+        if (!session || session.id_role != 2) {
+            window.location.replace("../index.html");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            fetch("../php/repair_orders.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "get_catalogs" })
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json.status === "success") {
+                    const selectDevice = document.getElementById("f-dtype");
+                    const selectService = document.getElementById("f-stype");
+                    
+                    json.data.devices.forEach(device => {
+                        selectDevice.innerHTML += `<option value="${device.id_device_type}">${device.name}</option>`;
+                    });
+                    
+                    json.data.services.forEach(service => {
+                        selectService.innerHTML += `<option value="${service.id_service_type}">${service.name}</option>`;
+                    });
+                }
+            });
+
+            document.getElementById("btn-guardar").addEventListener("click", () => {
+                const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+                
+                const datosOrden = {
+                    action: "create_order",
+                    id_user: session.id_user,
+                    customer_name: document.getElementById("f-cname").value,
+                    customer_phone: document.getElementById("f-cphone").value,
+                    customer_email: document.getElementById("f-cemail").value,
+                    id_device_type: document.getElementById("f-dtype").value,
+                    id_service_type: document.getElementById("f-stype").value,
+                    brand_model: document.getElementById("f-brand").value,
+                    reported_fault: document.getElementById("f-fault").value,
+                    final_price: document.getElementById("f-price").value || 0
+                };
+
+                if (!datosOrden.customer_name || !datosOrden.customer_phone || !datosOrden.id_device_type || !datosOrden.id_service_type || !datosOrden.brand_model) {
+                    alert("Por favor, llena todos los campos obligatorios (*).");
+                    return;
+                }
+
+                fetch("../php/repair_orders.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datosOrden)
+                })
+                .then(res => res.json())
+                .then(json => {
+                    if (json.status === "success") {
+                        alert("¡Equipo recibido y guardado con éxito!");
+                        window.location.href = "tecnico.html";
+                    } else {
+                        alert("Hubo un error: " + json.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    </script>
+</body>
+</html>
