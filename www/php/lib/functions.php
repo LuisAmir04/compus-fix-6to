@@ -200,6 +200,10 @@ function updateRepairOrder($data) {
 function processSale($data) {
     global $pdo;
     
+    $estadoCaja = checkShiftStatus($data['id_user']);
+    if ($estadoCaja['status'] === 'closed') {
+        return ["status" => "error", "message" => "Operación denegada: Debes abrir un turno en 'Mi Corte de Caja' antes de poder cobrar un equipo."];
+    }
     try {
         $pdo->beginTransaction();
 
@@ -225,4 +229,69 @@ function processSale($data) {
         return ["status" => "error", "message" => "Error al procesar: " . $e->getMessage()];
     }
 }
+
+// ---------------------------------------------
+// FUNCIONES PARA EL CORTE DE CAJA (TURNOS)
+// ---------------------------------------------
+
+function checkShiftStatus($id_user) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("SELECT * FROM cash_register WHERE id_user = :id_user AND closing_time IS NULL ORDER BY opening_time DESC LIMIT 1");
+    $stmt->execute(['id_user' => $id_user]);
+    $shift = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($shift) {
+        $stmtSales = $pdo->prepare("
+            SELECT SUM(total_paid) as cash_sales 
+            FROM sales 
+            WHERE id_user = :id_user AND payment_method = 'Efectivo' AND sale_date >= :opening_time
+        ");
+        $stmtSales->execute([
+            'id_user' => $id_user,
+            'opening_time' => $shift['opening_time']
+        ]);
+        $sales = $stmtSales->fetch(PDO::FETCH_ASSOC);
+        
+        $shift['cash_sales'] = $sales['cash_sales'] ?? 0;
+        $shift['expected_cash'] = $shift['initial_cash'] + $shift['cash_sales'];
+        
+        return ["status" => "open", "data" => $shift];
+    }
+    
+    return ["status" => "closed"];
+}
+
+function openShift($data) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("INSERT INTO cash_register (id_user, initial_cash) VALUES (:id_user, :initial_cash)");
+        $stmt->execute([
+            'id_user' => $data['id_user'],
+            'initial_cash' => $data['initial_cash']
+        ]);
+        return ["status" => "success", "message" => "Turno abierto correctamente."];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => "Error al abrir turno: " . $e->getMessage()];
+    }
+}
+
+function closeShift($data) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE cash_register 
+            SET closing_time = current_timestamp(), declared_cash = :declared_cash 
+            WHERE id_cut = :id_cut
+        ");
+        $stmt->execute([
+            'declared_cash' => $data['declared_cash'],
+            'id_cut' => $data['id_cut']
+        ]);
+        return ["status" => "success", "message" => "Turno cerrado correctamente."];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => "Error al cerrar turno: " . $e->getMessage()];
+    }
+}
+
 ?>

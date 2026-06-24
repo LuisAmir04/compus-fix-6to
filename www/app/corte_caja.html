@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <title>Mi Corte de Caja - TechFix</title>
+    
+    <script>
+        const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+        if (!session || session.id_role != 2) {
+            window.location.replace("../index.html");
+        }
+    </script>
+</head>
+<body class="bg-base-200 min-h-screen flex flex-col lg:flex-row">
+
+    <aside class="w-full lg:w-64 bg-base-100 shadow-md flex flex-col justify-between hidden lg:flex">
+        <div>
+            <div class="p-6 text-center text-2xl font-black border-b border-base-200 text-primary">
+                TECH<span class="text-base-content">FIX</span> <span class="text-xs block text-gray-400 font-normal">TALLER</span>
+            </div>
+            <ul class="menu w-full p-4 gap-2 text-base">
+                <li><a href="tecnico.html">Mis Reparaciones</a></li>
+                <li><a href="nueva_recepcion.html">Nueva Recepción (Crear Orden)</a></li>
+                <li><a class="active bg-primary text-primary-content" href="corte_caja.html">Mi Corte de Caja</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-base-200">
+            <button class="btn btn-error btn-outline w-full" onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <div class="navbar bg-base-100 shadow-sm px-6 justify-between">
+            <span class="text-xl font-bold">Gestión de Turno</span>
+            <span class="font-medium text-gray-500" id="estado-turno-nav">Verificando...</span>
+        </div>
+
+        <main class="p-6 flex-1 overflow-y-auto flex justify-center items-start pt-10">
+            
+            <div id="vista-abrir" class="card bg-base-100 w-full max-w-md shadow-xl hidden">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl text-primary justify-center mb-2">Abrir Nuevo Turno</h2>
+                    <p class="text-center text-sm text-gray-500 mb-6">Ingresa el fondo de caja con el que estás iniciando el día para dar cambio.</p>
+                    
+                    <div class="form-control w-full">
+                        <label class="label"><span class="label-text font-bold">Fondo Inicial en Caja (Efectivo)</span></label>
+                        <div class="join w-full">
+                            <span class="btn join-item no-animation cursor-default">$</span>
+                            <input type="number" id="input-fondo-inicial" class="input input-bordered join-item w-full" placeholder="Ej. 500.00" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions justify-end mt-6">
+                        <button class="btn btn-primary w-full" id="btn-abrir-turno">Comenzar Turno</button>
+                    </div>
+                </div>
+            </div>
+
+<div id="vista-cerrar" class="card bg-base-100 w-full max-w-md shadow-xl hidden">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl text-primary justify-center border-b pb-2 mb-2">Cierre de Turno</h2>
+                    <input type="hidden" id="id_cut_activo">
+                    
+                    <p class="text-center text-sm text-gray-500 mb-6">Es momento de hacer tu corte. Por favor, cuenta todos los billetes y monedas que hay físicamente en la caja e ingresa el total exacto.</p>
+
+                    <div class="form-control w-full mb-4">
+                        <label class="label"><span class="label-text font-bold text-error">¿Cuánto efectivo real hay en el cajón?</span></label>
+                        <div class="join w-full">
+                            <span class="btn join-item no-animation cursor-default">$</span>
+                            <input type="number" id="input-efectivo-declarado" class="input input-bordered input-error join-item w-full" placeholder="Ingresa lo que contaste..." step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="card-actions justify-end mt-2">
+                        <button class="btn btn-error text-white w-full" id="btn-cerrar-turno">Declarar y Cerrar Turno</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const idTecnico = session.id_user;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            verificarEstadoTurno();
+
+            document.getElementById("btn-abrir-turno").addEventListener("click", () => {
+                const fondo = document.getElementById("input-fondo-inicial").value;
+                if (!fondo || fondo < 0) return alert("Por favor ingresa un fondo inicial válido.");
+
+                fetch("../php/cash_register.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "open_shift", id_user: idTecnico, initial_cash: fondo })
+                })
+                .then(res => res.json())
+                .then(json => {
+                    if (json.status === "success") {
+                        alert("Turno abierto exitosamente.");
+                        verificarEstadoTurno();
+                    } else {
+                        alert(json.message);
+                    }
+                });
+            });
+
+            document.getElementById("btn-cerrar-turno").addEventListener("click", () => {
+                const declarado = document.getElementById("input-efectivo-declarado").value;
+                const idCut = document.getElementById("id_cut_activo").value;
+                
+                if (!declarado || declarado < 0) return alert("Por favor ingresa el dinero exacto que hay en la caja.");
+
+                if(confirm("¿Estás seguro de cerrar el turno con este monto? Esta acción no se puede deshacer.")) {
+                    fetch("../php/cash_register.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "close_shift", id_cut: idCut, declared_cash: declarado })
+                    })
+                    .then(res => res.json())
+                    .then(json => {
+                        if (json.status === "success") {
+                            alert("Turno cerrado. Ya puedes retirarte.");
+                            verificarEstadoTurno();
+                        } else {
+                            alert(json.message);
+                        }
+                    });
+                }
+            });
+        });
+
+        function verificarEstadoTurno() {
+            fetch("../php/cash_register.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "check_status", id_user: idTecnico })
+            })
+            .then(res => res.json())
+            .then(json => {
+                const navEstado = document.getElementById("estado-turno-nav");
+                const vistaAbrir = document.getElementById("vista-abrir");
+                const vistaCerrar = document.getElementById("vista-cerrar");
+
+                if (json.status === "open") {
+                    navEstado.innerText = "🔴 Turno Abierto";
+                    navEstado.classList.add("text-error");
+                    
+                    vistaAbrir.classList.add("hidden");
+                    vistaCerrar.classList.remove("hidden");
+
+                    document.getElementById("id_cut_activo").value = json.data.id_cut;
+                    document.getElementById("input-efectivo-declarado").value = "";
+
+                } else {
+                    navEstado.innerText = "⚪ Turno Cerrado";
+                    navEstado.classList.remove("text-error");
+                    
+                    vistaCerrar.classList.add("hidden");
+                    vistaAbrir.classList.remove("hidden");
+                    document.getElementById("input-fondo-inicial").value = "";
+                }
+            });
+        }
+
+        function cerrarSesion() {
+            fetch("../php/users.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "logout" })
+            }).then(() => {
+                sessionStorage.removeItem('techfix_user');
+                window.location.href = "../index.html";
+            });
+        }
+    </script>
+</body>
+</html>
