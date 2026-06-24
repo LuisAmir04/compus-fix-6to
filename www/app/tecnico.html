@@ -17,13 +17,12 @@
             
             <ul class="menu w-full p-4 gap-2 text-base">
                 <li><a class="active bg-primary text-primary-content" href="tecnico.html">Mis Reparaciones</a></li>
-                <li><a href="#">Nueva Recepción (Crear Orden)</a></li>
-                <li><a href="#">Punto de Venta (Cobrar)</a></li>
+                <li><a href="nueva_recepcion.html">Nueva Recepción (Crear Orden)</a></li>
                 <li><a href="#">Mi Corte de Caja</a></li>
             </ul>
         </div>
         <div class="p-4 border-t border-base-200">
-            <button class="btn btn-error btn-outline w-full" id="btnLogout">Cerrar Sesión</button>
+            <button class="btn btn-error btn-outline w-full" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </aside>
 
@@ -34,27 +33,327 @@
         </div>
 
         <main class="p-6 flex-1 overflow-y-auto">
+<main class="p-6 flex-1 overflow-y-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div class="card bg-base-100 shadow-sm border border-base-200">
                     <div class="card-body flex-row items-center justify-between">
                         <div>
                             <h2 class="card-title text-gray-500 text-sm">Mis Equipos Pendientes</h2>
-                            <p class="text-4xl font-bold text-warning">0</p>
+                            <p class="text-4xl font-bold text-warning" id="num-pendientes">0</p>
                         </div>
-                        <button class="btn btn-primary">Ver Lista</button>
                     </div>
                 </div>
+                
                 <div class="card bg-base-100 shadow-sm border border-base-200">
                     <div class="card-body flex-row items-center justify-between">
                         <div>
                             <h2 class="card-title text-gray-500 text-sm">Equipos Listos para Entrega</h2>
-                            <p class="text-4xl font-bold text-success">0</p>
+                            <p class="text-4xl font-bold text-success" id="num-listos">0</p>
                         </div>
-                        <button class="btn btn-outline">Cobrar Equipo</button>
+                        <button class="btn btn-outline" onclick="atajoCobros()">Ir a Cobros →</button>
                     </div>
                 </div>
             </div>
+        <div class="card bg-base-100 shadow-sm border border-base-200 mt-8" id="tabla-reparaciones">
+                <div class="card-body">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                        <h2 class="card-title">Mis Equipos en Taller</h2>
+                        <input type="text" id="buscadorCobros" onkeyup="filtrarCobros()" placeholder="Buscar cliente, folio o estado..." class="input input-bordered w-full max-w-xs" />
+                    </div>
+                    
+                    <div class="overflow-x-auto max-h-[400px] overflow-y-auto">
+                        <table class="table w-full">
+                            <thead>
+                                <tr>
+                                    <th>Folio</th>
+                                    <th>Cliente</th>
+                                    <th>Equipo</th>
+                                    <th>Falla Reportada</th>
+                                    <th>Estado Actual</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-ordenes">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <dialog id="modal_update" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg text-primary">Actualizar Orden #<span id="modal-folio"></span></h3>
+                    <input type="hidden" id="modal-id-orden">
+                    
+                    <div class="form-control w-full mt-4">
+                        <label class="label"><span class="label-text font-bold">Diagnóstico Técnico</span></label>
+                        <textarea id="modal-diagnostico" class="textarea textarea-bordered h-24" placeholder="Detalla el problema encontrado y la reparación..."></textarea>
+                    </div>
+                    
+                    <div class="form-control w-full mt-4">
+                        <label class="label"><span class="label-text font-bold">Precio Final ($)</span></label>
+                        <input type="number" id="modal-precio" class="input input-bordered w-full" step="0.01">
+                    </div>
+
+                    <div class="form-control w-full mt-4">
+                        <label class="label"><span class="label-text font-bold">Cambiar Estado</span></label>
+                        <select id="modal-estado" class="select select-bordered w-full">
+                            <option value="1">Recibido</option>
+                            <option value="2">En Reparación</option>
+                            <option value="3">Listo para Entrega</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Cancelar</button></form>
+                        <button class="btn btn-primary" id="btn-guardar-update">Guardar Cambios</button>
+                    </div>
+                </div>
+            </dialog>
+
+            <dialog id="modal_cobrar" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg text-success">Procesar Cobro - Folio #<span id="cobro-folio"></span></h3>
+                    <input type="hidden" id="cobro-id-orden">
+                    <input type="hidden" id="cobro-total-input">
+                    
+                    <div class="bg-base-200 p-4 rounded-lg mt-4 text-sm">
+                        <p><strong>Cliente:</strong> <span id="cobro-cliente"></span></p>
+                        <p><strong>Equipo:</strong> <span id="cobro-equipo"></span></p>
+                        <p class="mt-2"><strong>Trabajo realizado:</strong></p>
+                        <p id="cobro-diagnostico" class="text-gray-600 italic"></p>
+                    </div>
+                    
+                    <div class="form-control w-full mt-4">
+                        <label class="label"><span class="label-text font-bold">Método de Pago</span></label>
+                        <select id="cobro-metodo" class="select select-bordered w-full">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                            <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-6 text-right">
+                        <span class="text-xl">Total a pagar: </span>
+                        <span class="text-3xl font-black text-success" id="cobro-total">$0.00</span>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Cancelar</button></form>
+                        <button class="btn btn-success text-white" id="btn-confirmar-cobro">Confirmar Pago y Entregar</button>
+                    </div>
+                </div>
+            </dialog>
+
+            <dialog id="modal_cliente" class="modal">
+                <div class="modal-box">
+                    <h3 class="font-bold text-lg border-b pb-2 mb-4">Datos de Contacto</h3>
+                    
+                    <div class="space-y-3">
+                        <p><span class="font-bold text-gray-500">Cliente:</span> <br> <span id="contacto-nombre" class="text-lg"></span></p>
+                        <p><span class="font-bold text-gray-500">Teléfono:</span> <br> <span id="contacto-telefono" class="text-lg text-primary font-medium"></span></p>
+                        <p><span class="font-bold text-gray-500">Correo:</span> <br> <span id="contacto-correo" class="text-lg"></span></p>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Cerrar</button></form>
+                    </div>
+                </div>
+            </dialog>
+
         </main>
     </div>
+    <script>
+
+    const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+    
+
+    if (!session || session.id_role != 2) {
+        window.location.replace("../index.html");
+    }
+
+    let ordenesActuales = []; 
+
+    document.addEventListener("DOMContentLoaded", () => {
+        cargarMisOrdenes();
+
+
+        document.getElementById("btn-guardar-update").addEventListener("click", () => {
+            const dataUpdate = {
+                action: "update_order",
+                id_order: document.getElementById("modal-id-orden").value,
+                technical_diagnosis: document.getElementById("modal-diagnostico").value,
+                final_price: document.getElementById("modal-precio").value || 0,
+                id_status: document.getElementById("modal-estado").value
+            };
+
+            fetch("../php/repair_orders.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dataUpdate)
+            })
+            .then(res => res.json())
+            .then(json => {
+                if (json.status === "success") {
+                    document.getElementById("modal_update").close();
+                    cargarMisOrdenes();
+                } else {
+                    alert("Error: " + json.message);
+                }
+            });
+        });
+    });
+
+    function cargarMisOrdenes() {
+        const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+        const idTecnico = session.id_user;
+
+        fetch("../php/repair_orders.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "get_my_orders", id_user: idTecnico })
+        })
+        .then(res => res.json())
+        .then(json => {
+            if (json.status === "success") {
+                ordenesActuales = json.data;
+                const tbody = document.getElementById("tbody-ordenes");
+                tbody.innerHTML = "";
+
+                
+                const numPendientes = ordenesActuales.filter(o => o.id_status == 1 || o.id_status == 2).length;
+                const numListos = ordenesActuales.filter(o => o.id_status == 3).length;
+                document.getElementById("num-pendientes").innerText = numPendientes;
+                document.getElementById("num-listos").innerText = numListos;
+
+                
+                        ordenesActuales.forEach((orden, index) => {
+                    let badgeClass = orden.id_status == 3 ? "badge-success" : (orden.id_status == 2 ? "badge-info" : "badge-warning");
+                    
+                    
+
+                    let botonAccion = `<button class="btn btn-sm btn-outline" onclick="abrirModal(${index})">Editar</button>`;
+                    if (orden.id_status == 3) {
+                        botonAccion = `
+                        <div class="flex gap-2 items-center">
+                            <button class="btn btn-sm btn-success text-white" onclick="abrirModalCobrar(${index})">Cobrar</button>
+                            ${botonAccion}
+                        </div>`;
+                    }
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="font-bold text-primary">#${orden.id_order}</td>
+                            <td><a href="#" class="text-black font-medium cursor-pointer hover:opacity-80" onclick="abrirModalContacto(${index}); return false;">${orden.customer_name}</a></td>
+                            <td class="text-xs">${orden.brand_model}</td>
+                            <td class="text-xs text-gray-500 max-w-xs truncate">${orden.reported_fault}</td>
+                            <td><span class="badge ${badgeClass}">${orden.current_status}</span></td>
+                            <td>${botonAccion}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+    }
+
+    function abrirModal(index) {
+        const orden = ordenesActuales[index];
+        document.getElementById("modal-folio").innerText = orden.id_order;
+        document.getElementById("modal-id-orden").value = orden.id_order;
+        document.getElementById("modal-diagnostico").value = orden.technical_diagnosis || "";
+        document.getElementById("modal-precio").value = orden.final_price || "0.00";
+        document.getElementById("modal-estado").value = orden.id_status;
+        
+        document.getElementById("modal_update").showModal();
+    }
+
+    function abrirModalCobrar(index) {
+        const orden = ordenesActuales[index];
+        document.getElementById("cobro-folio").innerText = orden.id_order;
+        document.getElementById("cobro-id-orden").value = orden.id_order;
+        document.getElementById("cobro-cliente").innerText = orden.customer_name;
+        document.getElementById("cobro-equipo").innerText = orden.brand_model;
+        document.getElementById("cobro-diagnostico").innerText = orden.technical_diagnosis || "Sin diagnóstico registrado";
+        
+        
+        document.getElementById("cobro-total").innerText = "$" + parseFloat(orden.final_price).toFixed(2);
+        document.getElementById("cobro-total-input").value = orden.final_price;
+        
+        document.getElementById("modal_cobrar").showModal();
+    }
+
+    document.getElementById("btn-confirmar-cobro").addEventListener("click", () => {
+        const session = JSON.parse(sessionStorage.getItem('techfix_user'));
+        const idTecnico = session.id_user;
+        
+        const dataCobro = {
+            action: "process_sale",
+            id_order: document.getElementById("cobro-id-orden").value,
+            id_user: idTecnico,
+            payment_method: document.getElementById("cobro-metodo").value,
+            total_paid: document.getElementById("cobro-total-input").value
+        };
+
+        fetch("../php/sales.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataCobro)
+        })
+        .then(res => res.json())
+        .then(json => {
+            if (json.status === "success") {
+                document.getElementById("modal_cobrar").close();
+                alert("¡Cobro exitoso! El equipo ha sido marcado como Entregado.");
+                cargarMisOrdenes();
+            } else {
+                alert("Error: " + json.message);
+            }
+        })
+        .catch(error => console.error("Error en el cobro:", error));
+    });
+
+    function filtrarCobros() {
+        const textoBuscado = document.getElementById('buscadorCobros').value.toLowerCase();
+        const filas = document.querySelectorAll('#tbody-ordenes tr');
+        
+        filas.forEach(fila => {
+            const contenidoFila = fila.innerText.toLowerCase();
+            if (contenidoFila.includes(textoBuscado)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    }
+
+    function atajoCobros() {
+        document.getElementById('tabla-reparaciones').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('buscadorCobros').value = 'listo para entrega';
+        filtrarCobros();
+    }
+    function cerrarSesion() {
+        fetch("../php/users.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "logout" })
+        })
+        .then(() => {
+            sessionStorage.removeItem('techfix_user');
+            window.location.href = "../index.html";
+        })
+        .catch(error => console.error("Error al cerrar sesión:", error));
+    }
+
+    function abrirModalContacto(index) {
+        const orden = ordenesActuales[index];
+        document.getElementById("contacto-nombre").innerText = orden.customer_name;
+        document.getElementById("contacto-telefono").innerText = orden.customer_phone || "No registrado";
+        document.getElementById("contacto-correo").innerText = orden.customer_email || "No registrado";
+        
+        document.getElementById("modal_cliente").showModal();
+    }
+
+</script>
 </body>
 </html>

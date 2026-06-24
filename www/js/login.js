@@ -17,12 +17,11 @@ button.addEventListener("click", e => {
     })
   })
   .then(res => res.json())
-  .then(json => {
+.then(json => {
     if (json.status === "success") {
-
-      localStorage.setItem("user", JSON.stringify(json.data));
+      sessionStorage.setItem("techfix_user", JSON.stringify(json.data));
       
-if(json.data.id_role === 1) {
+      if(json.data.id_role === 1) {
           window.location.href = "app/admin.html"; 
       } else {
           window.location.href = "app/tecnico.html"; 
