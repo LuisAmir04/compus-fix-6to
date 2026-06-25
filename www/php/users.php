@@ -36,6 +36,17 @@ switch ($action) {
         echo json_encode(["status" => "success"]);
         break;
 
+        //Esto de abajo es para obtener los datos de la tabla de usuarios, lo de arriba es para el login y logout
+
+        case 'getAll':
+        $usersList = getAllUsers();
+        if ($usersList) {
+            echo json_encode(["status" => "success", "data" => $usersList]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "No hay usuarios para mostrar"]);
+        }
+        break;
+
     default:
         echo json_encode(["status"=>"error","message"=>"Acción no válida"]);
 }
