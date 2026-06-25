@@ -1,0 +1,7 @@
+-Hay que añadir ah todas las tablas/columnas una opcion de editar y eliminar
+
+-Hay que crear igual un boton con Hypervinculo como los anteriores que sea de añadir debe tener boton de guardar y cancelar y haacer todo el proceso para que termine en la tabla que estemos añadiendo nuevo registro 
+
+-Se debe detectar la accion del click sobre el boton y la forma mas sencilla es mediante la accion de Click/Submit por medio de un Lisetenr se hace en el JS de la tabla que manejemos
+
+- 
