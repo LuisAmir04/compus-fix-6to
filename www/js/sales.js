@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSubmit = document.getElementById("btn-submit");
     const btnCancel = document.getElementById("btn-cancel");
 
-    // 1. Cargar las ventas al iniciar
+    // Cargar las ventas al iniciar
     getAllSales();
 
     function getAllSales() {
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(error => console.error("Error en la petición:", error));
     }
 
-    // 2. Procesar Envío de Formulario (Insertar o Actualizar)
+    // Procesar Envío de Formulario (Insertar o Actualizar)
     formSale.addEventListener("submit", (e) => {
         e.preventDefault();
 
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(error => console.error("Error al procesar:", error));
     });
 
-    // 3. Asignar controladores dinámicos a los botones Editar/Eliminar
+    // Asignar controladores dinámicos a los botones Editar/Eliminar
     function asignarEventosAcciones() {
         // Evento Editar
         document.querySelectorAll(".btn-edit").forEach(btn => {
