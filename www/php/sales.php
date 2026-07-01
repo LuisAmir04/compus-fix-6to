@@ -19,8 +19,19 @@ switch ($action) {
         echo json_encode($resultado);
         break;
 
+    case "update_sale":
+        $resultado = updateSale($post); 
+        echo json_encode($resultado);
+        break;
+
+    case "delete_sale":
+        $id_sale = $post['id_sale'] ?? 0;
+        $resultado = deleteSale($id_sale); 
+        echo json_encode($resultado);
+        break;
+
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
-        exit;
+        break;
 }
 ?>
