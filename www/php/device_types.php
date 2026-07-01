@@ -10,6 +10,9 @@ switch ($action) {
     case "getAll":
         $data = getAllDeviceTypes(); 
         break;
+    case "insert":
+        $data = insertDeviceType($post);
+        break;
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
         exit;

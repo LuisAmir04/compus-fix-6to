@@ -294,4 +294,11 @@ function closeShift($data) {
     }
 }
 
+function insertDeviceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO device_types (name) VALUES (:name)");
+    $stmt->execute([":name" => $datos["name"]]);
+    return $pdo->lastInsertId();
+}
+
 ?>
