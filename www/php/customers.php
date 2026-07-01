@@ -10,6 +10,12 @@ switch ($action) {
     case "getAll":
         $data = getAllCustomers(); 
         break;
+    case 'insert':
+        $name = $post['name'] ?? '';
+        $email = $post['email'] ?? '';
+        $phone = $post['phone'] ?? '';
+        $data = insertCustomer($name, $email, $phone);
+        break;    
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
         exit;
