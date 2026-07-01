@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const inputInitialCash = document.getElementById("initial_cash");
     const inputDeclaredCash = document.getElementById("declared_cash");
-    const form = document.getElementById("formCorte");
+    const btnGuardar = document.getElementById("btnGuardar");
 
     if (!id_cut) return;
 
@@ -25,11 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(err => console.error(err));
 
-    form.addEventListener("submit", (e) => {
+    btnGuardar.addEventListener("click", (e) => {
         e.preventDefault();
-
-        const initial_cash = inputInitialCash.value.trim();
-        const declared_cash = inputDeclaredCash.value.trim();
 
         fetch("../php/cash_register.php", {
             method: "POST",
@@ -37,16 +34,18 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
                 action: "update",
                 id_cut: id_cut,
-                initial_cash: initial_cash,
-                declared_cash: declared_cash
+                initial_cash: inputInitialCash.value,
+                declared_cash: inputDeclaredCash.value
             })
         })
         .then(res => res.json())
         .then(json => {
+            console.log(json);
+
             if (json.status === "success") {
                 window.location.href = "index.html";
             } else {
-                console.error(json.message);
+                alert(json.message || "No se pudo actualizar");
             }
         })
         .catch(err => console.error(err));

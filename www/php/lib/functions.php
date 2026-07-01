@@ -269,14 +269,12 @@ function updateCashRegister($data) {
         $stmt = $pdo->prepare("
             UPDATE cash_register
             SET initial_cash = :initial_cash,
-                closing_time = :closing_time,
                 declared_cash = :declared_cash
             WHERE id_cut = :id_cut
         ");
 
         $stmt->execute([
             'initial_cash' => $data['initial_cash'],
-            'closing_time' => $data['closing_time'],
             'declared_cash' => $data['declared_cash'],
             'id_cut' => $data['id_cut']
         ]);
