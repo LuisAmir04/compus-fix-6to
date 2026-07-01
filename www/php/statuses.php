@@ -10,6 +10,9 @@ switch ($action) {
     case "getAll":
         $data = getAllStatuses(); 
         break;
+        case 'insert':
+        $data = insertStatus($post);
+        break;
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
         exit;

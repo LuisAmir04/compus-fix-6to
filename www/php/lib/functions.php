@@ -294,4 +294,17 @@ function closeShift($data) {
     }
 }
 
+function insertStatus($datos) {
+    global $pdo; // O la variable de tu conexión PDO que uses en este proyecto
+    $name = $datos["name"];
+    
+    try {
+        $stmt = $pdo->prepare("INSERT INTO statuses (name) VALUES (:name)");
+        $result = $stmt->execute([':name' => $name]);
+        return $result;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 ?>
