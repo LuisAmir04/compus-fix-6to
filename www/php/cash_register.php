@@ -10,6 +10,23 @@ $post = json_decode(file_get_contents("php://input"), true);
 $action = $post['action'] ?? '';
 
 switch ($action) {
+   
+case "delete":
+    echo json_encode(deleteCashRegister($post['id_cut']));
+    break;
+    
+    case "getUsers":
+    $users = getAllUsers();
+    echo json_encode(["status" => "success", "data" => $users]);
+    break;
+    
+    case "getOne":
+    echo json_encode(getCashRegisterById($post['id_cut']));
+    break;
+
+case "update":
+    echo json_encode(updateCashRegister($post));
+    break;
 
     case "getAll":
         $data = getAllCashRegister(); 
