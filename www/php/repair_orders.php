@@ -15,11 +15,6 @@ switch ($action) {
         echo json_encode(["status" => "success", "data" => $data]);
         break;
 
-    case "get_order":
-        $data = getOrderById($post['id_order']);
-        echo json_encode(["status" => "success", "data" => $data]);
-        break;
-
     case "get_catalogs":
         $data = getCatalogsForOrder();
         echo json_encode(["status" => "success", "data" => $data]);
@@ -28,16 +23,6 @@ switch ($action) {
     case "insert_order":
         $ok = insertRepairOrder($post);
         echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Orden creada" : "No se pudo crear"]);
-        break;
-
-    case "update_order":
-        $ok = updateRepairOrderRow($post);
-        echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Orden actualizada" : "No se pudo actualizar"]);
-        break;
-
-    case "delete_order":
-        $ok = deleteRepairOrder($post['id_order']);
-        echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Orden eliminada" : "No se pudo eliminar"]);
         break;
 
     default:

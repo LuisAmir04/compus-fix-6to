@@ -97,37 +97,11 @@ function getAllCashRegister() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getOrderById($id) {
-    global $pdo;
-    return $pdo->query("SELECT * FROM repair_orders WHERE id_order = $id")->fetch(PDO::FETCH_ASSOC);
-}
-
 function insertRepairOrder($post) {
     global $pdo;
     $sql = "INSERT INTO repair_orders (id_customer, id_device_type, id_service_type, id_user, brand_model, reported_fault, technical_diagnosis, final_price, id_status)
             VALUES ({$post['id_customer']}, {$post['id_device_type']}, {$post['id_service_type']}, {$post['id_user']}, '{$post['brand_model']}', '{$post['reported_fault']}', '{$post['technical_diagnosis']}', {$post['final_price']}, {$post['id_status']})";
     return $pdo->exec($sql);
-}
-
-function updateRepairOrderRow($post) {
-    global $pdo;
-    $sql = "UPDATE repair_orders SET
-            id_customer = {$post['id_customer']},
-            id_device_type = {$post['id_device_type']},
-            id_service_type = {$post['id_service_type']},
-            id_user = {$post['id_user']},
-            brand_model = '{$post['brand_model']}',
-            reported_fault = '{$post['reported_fault']}',
-            technical_diagnosis = '{$post['technical_diagnosis']}',
-            final_price = {$post['final_price']},
-            id_status = {$post['id_status']}
-            WHERE id_order = {$post['id_order']}";
-    return $pdo->exec($sql);
-}
-
-function deleteRepairOrder($id) {
-    global $pdo;
-    return $pdo->exec("DELETE FROM repair_orders WHERE id_order = $id");
 }
 
 function getCatalogsForOrder() {
