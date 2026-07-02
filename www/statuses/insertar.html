@@ -1,0 +1,58 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <title>Registrar Status</title>
+</head>
+<body class="min-h-screen bg-base-200 flex items-center justify-center p-4">
+
+    <div class="card bg-base-100 w-full max-w-md shadow-xl border border-base-300">
+        <div class="card-body">
+            
+            <form id="formnuevostatus" class="space-y-6">
+                
+                <h2 class="card-title text-2xl font-bold text-primary justify-center mb-2">
+                    Registrar Nuevo Estatus
+                </h2>
+                
+                <div class="form-control w-full">
+                    <label for="statusName" class="label font-semibold text-base-content/80 mb-1">
+                        Nombre del Status
+                    </label>
+                    <input 
+                        type="text" 
+                        id="statusName" 
+                        name="statusName" 
+                        placeholder="Ej. En Espera, Enviado..." 
+                        class="input input-bordered w-full focus:input-primary transition-all duration-200" 
+                        required
+                    >
+                </div>
+                
+                <div class="flex flex-col gap-3 pt-2">
+                    <button 
+                        id="btnGuardar" 
+                        type="button" 
+                        class="btn btn-primary w-full shadow-md font-bold text-white hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    >
+                        Guardar Status
+                    </button>
+                    
+                    <a 
+                        href="index.html" 
+                        class="btn btn-outline btn-ghost w-full font-semibold"
+                    >
+                        Cancelar
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script src="../js/statuses.js"></script>
+</body>
+</html>
