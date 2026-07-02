@@ -15,6 +15,11 @@ switch ($action) {
         echo json_encode(["status" => "success", "data" => $data]);
         break;
 
+    case "delete_order":
+        $ok = deleteRepairOrder($post['id_order']);
+        echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Orden eliminada" : "No se pudo eliminar"]);
+        break;
+
     case "get_catalogs":
         $data = getCatalogsForOrder();
         echo json_encode(["status" => "success", "data" => $data]);

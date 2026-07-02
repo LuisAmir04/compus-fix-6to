@@ -30,7 +30,7 @@ function cargarOrdenes() {
                     <td>${order.created_at}</td>
                     <td>
                         <a href="editar.html" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="eliminar.html" class="btn btn-sm btn-error">Eliminar</a>
+                        <a href="#" data-id="${order.id_order}" class="btn btn-sm btn-error">Eliminar</a>
                     </td>
                 </tr>`;
             });
@@ -80,3 +80,46 @@ function llenarSelect(name, items, valueField, textField) {
         select.innerHTML += `<option value="${item[valueField]}">${item[textField]}</option>`;
     });
 }
+
+tbody.addEventListener('click', function(evento) {
+  // Verificamos si el elemento clickeado coincide con nuestro elemento dinámico
+  if (evento.target && evento.target.matches('.btn-error')) {
+    const id = evento.target.getAttribute('data-id');
+    console.log('¡Elemento dinámico clickeado! ID:', id);
+    Swal.fire({
+        title: "Estas seguro de eliminar este registro?",
+        text: "No vas a poder revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Confirmar",
+        }).then((result) => {
+        if (result.isConfirmed) {
+            const datos = { action: "delete_order", id_order: id };
+            fetch("../php/repair_orders.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(datos)
+            })
+            .then(res => res.json())
+            .then(json => {
+                let response = {
+                        title: "Borrado",
+                        text: "Tu registro ha sido eliminado.",
+                        icon: "success"
+                    }
+                if (json.status === "error") {
+                    response = {
+                        title: "Error",
+                        text: "No se pudo eliminar el registro.",
+                        icon: "error"
+                    }
+                }
+                Swal.fire(response);
+                cargarOrdenes();
+            })
+        } 
+    });
+  }
+});

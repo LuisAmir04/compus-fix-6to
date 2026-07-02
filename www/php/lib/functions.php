@@ -113,3 +113,10 @@ function getCatalogsForOrder() {
         "users" => getAllUsers()
     ];
 }
+
+function deleteRepairOrder($id_order) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM repair_orders WHERE id_order = :id_order");
+    $stmt->execute(['id_order' => $id_order]);
+    return $stmt->rowCount() > 0; // Returns true if a row was deleted
+}
