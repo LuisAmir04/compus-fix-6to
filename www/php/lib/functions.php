@@ -410,4 +410,17 @@ function deleteRole($data) {
         ];
     }
 }
+function insertDeviceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO device_types (name) VALUES (:name)");
+    $stmt->execute([":name" => $datos["name"]]);
+    return $pdo->lastInsertId();
+}
+
+function insertServiceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO service_types (name) VALUES (:name)");
+    $stmt->execute([":name" => $datos["name"]]);
+    return $pdo->lastInsertId();
+}
 ?>

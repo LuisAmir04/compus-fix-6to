@@ -10,6 +10,9 @@ switch ($action) {
     case "getAll":
         $data = getAllServiceTypes(); 
         break;
+        case "insert":
+        $data = insertServiceType($post);
+        break;
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
         exit;
