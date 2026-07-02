@@ -272,6 +272,44 @@ function checkShiftStatus($id_user) {
     return ["status" => "closed"];
 }
 
+function updateCashRegister($data) {
+    global $pdo;
+
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE cash_register
+            SET initial_cash = :initial_cash,
+                declared_cash = :declared_cash
+            WHERE id_cut = :id_cut
+        ");
+
+        $stmt->execute([
+            'initial_cash' => $data['initial_cash'],
+            'declared_cash' => $data['declared_cash'],
+            'id_cut' => $data['id_cut']
+        ]);
+
+        return ["status" => "success", "message" => "Registro actualizado correctamente."];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => $e->getMessage()];
+    }
+}
+
+function deleteCashRegister($id_cut) {
+    global $pdo;
+
+    try {
+        $stmt = $pdo->prepare("DELETE FROM cash_register WHERE id_cut = :id_cut");
+        $stmt->execute([
+            'id_cut' => $id_cut
+        ]);
+
+        return ["status" => "success", "message" => "Registro eliminado correctamente."];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => $e->getMessage()];
+    }
+}
+
 function openShift($data) {
     global $pdo;
     try {
@@ -436,4 +474,23 @@ function insertStatus($datos) {
         return false;
     }
 }
+
+function getCashRegisterById($id_cut) {
+    global $pdo;
+
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM cash_register WHERE id_cut = :id_cut");
+        $stmt->execute(['id_cut' => $id_cut]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($data) {
+            return ["status" => "success", "data" => $data];
+        }
+
+        return ["status" => "error", "message" => "Registro no encontrado"];
+    } catch (Exception $e) {
+        return ["status" => "error", "message" => $e->getMessage()];
+    }
+}
+
 ?>
