@@ -107,13 +107,6 @@ function getAllCashRegister() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function insertRepairOrder($post) {
-    global $pdo;
-    $sql = "INSERT INTO repair_orders (id_customer, id_device_type, id_service_type, id_user, brand_model, reported_fault, technical_diagnosis, final_price, id_status)
-            VALUES ({$post['id_customer']}, {$post['id_device_type']}, {$post['id_service_type']}, {$post['id_user']}, '{$post['brand_model']}', '{$post['reported_fault']}', '{$post['technical_diagnosis']}', {$post['final_price']}, {$post['id_status']})";
-    return $pdo->exec($sql);
-}
-
 // ---------------------------------------------
 // FUNCIONES PARA EL CORTE DE CAJA (TURNOS)
 // ---------------------------------------------
@@ -198,23 +191,6 @@ function openShift($data) {
     }
 }
 
-function deleteRepairOrder($id_order) {
-    global $pdo;
-    try {
-        $stmt = $pdo->prepare("
-            UPDATE cash_register 
-            SET closing_time = current_timestamp(), declared_cash = :declared_cash 
-            WHERE id_cut = :id_cut
-        ");
-        $stmt->execute([
-            'declared_cash' => $data['declared_cash'],
-            'id_cut' => $data['id_cut']
-        ]);
-        return ["status" => "success", "message" => "Turno cerrado correctamente."];
-    } catch (Exception $e) {
-        return ["status" => "error", "message" => "Error al cerrar turno: " . $e->getMessage()];
-    }
-}
 function insertRole($data) {
     global $pdo;
     $name = trim($data['name'] ?? '');
