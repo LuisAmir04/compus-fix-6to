@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <title>Insertar Tipo de Dispositivo</title>
+</head>
+<body class="p-8">
+    <form id="formNuevoDeviceType" class="max-w-md">
+        <h2 class="text-xl font-bold mb-4">Registrar tipo de dispositivo</h2>
+
+        <div class="mb-4">
+            <label for="Nombre" class="label">Nombre</label>
+            <input type="text" id="Nombre" name="Nombre" required class="input input-bordered w-full">
+        </div>
+
+        <button id="btnGuardar" type="button" class="btn btn-primary">guardar</button>
+        <a href="index.html" class="btn">cancelar</a>
+    </form>
+
+    <script src="../js/device_types.js"></script>
+</body>
+</html>

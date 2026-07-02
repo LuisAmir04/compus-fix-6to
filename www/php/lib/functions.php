@@ -32,6 +32,16 @@ function getAllCustomers() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function insertCustomer($name, $phone, $email) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT customers(name, phone, email) VALUES (:name, :phone, :email)");
+    return $stmt->execute([
+        ':name' => $name,
+        ':phone' => $phone,
+        ':email' => $email
+    ]);
+}
+
 function getAllUsers() {
     global $pdo;
     $stmt = $pdo->query("SELECT u.id_user, u.username, r.name AS role_name 
@@ -329,6 +339,139 @@ function closeShift($data) {
         return ["status" => "success", "message" => "Turno cerrado correctamente."];
     } catch (Exception $e) {
         return ["status" => "error", "message" => "Error al cerrar turno: " . $e->getMessage()];
+    }
+}
+function insertRole($data) {
+    global $pdo;
+    $name = trim($data['name'] ?? '');
+
+    if ($name === '') {
+        return ["status" => "error", "message" => "El nombre del rol es obligatorio"];
+    }
+
+    try {
+        $stmt = $pdo->prepare("INSERT INTO roles (name) VALUES (:name)");
+        $stmt->execute(['name' => $name]);
+
+        return [
+            "status" => "success",
+            "message" => "Rol registrado correctamente",
+            "id" => $pdo->lastInsertId()
+        ];
+
+    } catch (Exception $e) {
+        return [
+            "status" => "error",
+            "message" => "Error al registrar el rol: " . $e->getMessage()
+        ];
+    }
+}
+
+function updateRole($data) {
+    global $pdo;
+
+    $id_role = $data['id_role'] ?? null;
+    $name = trim($data['name'] ?? '');
+
+    if (!$id_role || $name === '') {
+        return [
+            "status" => "error",
+            "message" => "Datos incompletos para actualizar el rol"
+        ];
+    }
+
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE roles
+            SET name = :name
+            WHERE id_role = :id_role
+        ");
+
+        $stmt->execute([
+            'name' => $name,
+            'id_role' => $id_role
+        ]);
+
+        return [
+            "status" => "success",
+            "message" => "Rol actualizado correctamente"
+        ];
+
+    } catch (Exception $e) {
+        return [
+            "status" => "error",
+            "message" => "Error al actualizar el rol: " . $e->getMessage()
+        ];
+    }
+}
+
+function deleteRole($data) {
+    global $pdo;
+
+    $id_role = $data['id_role'] ?? null;
+
+    if (!$id_role) {
+        return [
+            "status" => "error",
+            "message" => "Falta el ID del rol a eliminar"
+        ];
+    }
+
+    try {
+
+        $stmt = $pdo->prepare("
+            DELETE FROM roles
+            WHERE id_role = :id_role
+        ");
+
+        $stmt->execute([
+            'id_role' => $id_role
+        ]);
+
+        return [
+            "status" => "success",
+            "message" => "Rol eliminado correctamente"
+        ];
+
+    } catch (PDOException $e) {
+
+        if ($e->getCode() == 23000) {
+            return [
+                "status" => "error",
+                "message" => "No se puede eliminar: hay usuarios asignados a este rol"
+            ];
+        }
+
+        return [
+            "status" => "error",
+            "message" => "Error al eliminar el rol: " . $e->getMessage()
+        ];
+    }
+}
+function insertDeviceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO device_types (name) VALUES (:name)");
+    $stmt->execute([":name" => $datos["name"]]);
+    return $pdo->lastInsertId();
+}
+
+function insertServiceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO service_types (name) VALUES (:name)");
+    $stmt->execute([":name" => $datos["name"]]);
+    return $pdo->lastInsertId();
+}
+
+function insertStatus($datos) {
+    global $pdo; // O la variable de tu conexión PDO que uses en este proyecto
+    $name = $datos["name"];
+    
+    try {
+        $stmt = $pdo->prepare("INSERT INTO statuses (name) VALUES (:name)");
+        $result = $stmt->execute([':name' => $name]);
+        return $result;
+    } catch (Exception $e) {
+        return false;
     }
 }
 

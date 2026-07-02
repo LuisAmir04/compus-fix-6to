@@ -8,21 +8,41 @@ fetch("../php/users.php", {
 })
 .then(res => res.json())
 .then(json => {
-    if (json.status === "success") {
-        const tbody = document.querySelector("#tbody");
-        tbody.innerHTML = "";
-
-        json.data.forEach(user => {
-            tbody.innerHTML += `
+    const tbody = document.querySelector("#tbody");
+    tbody.innerHTML = "";
+    json.data.forEach(user => {
+        tbody.innerHTML += `
                 <tr>
-                    <td class="px-6 py-4 text-sm text-gray-700">${user.id_user}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700">${user.username}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700">${user.role_name}</td>
+                    <td>${user.id_user}</td>
+                    <td>${user.username}</td>
+                    <td>${user.id_role}</td>
+                <td class="flex gap-2">
+                        <a href="editar.html?id=${user.id_user}" class="btn btn-primary btn-sm">
+                            Editar
+                        </a>
+
+                        <button onclick="eliminarUsuario(${user.id_user})" class="btn btn-error btn-sm">
+                            Eliminar
+                        </button>
+                    </td>
                 </tr>
             `;
-        });
-    } else {
-        console.error("Error o tabla vacía:", json.message);
-    }
-})
-.catch(error => console.error("Error en la petición:", error));
+              });
+        });          
+    function eliminarUsuario(id) {
+
+    if (!confirm("¿Deseas eliminarlo?")) return;
+
+    const filas = document.querySelectorAll("#tbody tr");
+
+    filas.forEach(fila => {
+
+        const idFila = fila.children[0].textContent.trim();
+
+        if (idFila == id) {
+            fila.remove();
+        }
+
+    });
+
+}
