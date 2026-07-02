@@ -32,6 +32,16 @@ function getAllCustomers() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function insertCustomer($name, $phone, $email) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT customers(name, phone, email) VALUES (:name, :phone, :email)");
+    return $stmt->execute([
+        ':name' => $name,
+        ':phone' => $phone,
+        ':email' => $email
+    ]);
+}
+
 function getAllUsers() {
     global $pdo;
     $stmt = $pdo->query("SELECT u.id_user, u.username, r.name AS role_name 
