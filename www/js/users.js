@@ -1,6 +1,4 @@
 
-
-
 fetch("../php/users.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
