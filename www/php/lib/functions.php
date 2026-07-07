@@ -191,6 +191,39 @@ function openShift($data) {
     }
 }
 
+function closeShift($data) {
+    global $pdo;
+
+    try {
+
+        $stmt = $pdo->prepare("
+            UPDATE cash_register
+            SET
+                closing_time = NOW(),
+                declared_cash = :declared_cash
+            WHERE id_cut = :id_cut
+        ");
+
+        $stmt->execute([
+            'declared_cash' => $data['declared_cash'],
+            'id_cut' => $data['id_cut']
+        ]);
+
+        return [
+            "status" => "success",
+            "message" => "Turno cerrado correctamente."
+        ];
+
+    } catch (Exception $e) {
+
+        return [
+            "status" => "error",
+            "message" => $e->getMessage()
+        ];
+
+    }
+}
+
 function insertRole($data) {
     global $pdo;
     $name = trim($data['name'] ?? '');
