@@ -367,4 +367,27 @@ function deleteRepairOrder($id_order) {
     return $stmt->rowCount() > 0; // Returns true if a row was deleted
 }
 
+function getCatalogsForSales() {
+    return [
+        "users" => getAllUsers(),
+        "orders" => getAllRepairOrders()
+    ];
+}
+
+function insertSale($datos) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("INSERT INTO sales (id_order, id_user, payment_method, total_paid) 
+                               VALUES (:id_order, :id_user, :payment_method, :total_paid)");
+        return $stmt->execute([
+            ':id_order' => $datos['id_order'],
+            ':id_user' => $datos['id_user'],
+            ':payment_method' => $datos['payment_method'],
+            ':total_paid' => $datos['total_paid']
+        ]);
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 ?>

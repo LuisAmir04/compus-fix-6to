@@ -7,20 +7,24 @@ $action = $post['action'] ?? '';
 switch ($action) {
     case "getAll":
         $data = getAllSales(); 
-        if ($data) {
-            echo json_encode(["status" => "success", "data" => $data]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "No hay datos para mostrar"]);
-        }
+        echo json_encode(["status" => "success", "data" => $data]);
         break;
 
-    case "process_sale":
-        $resultado = processSale($post);
-        echo json_encode($resultado);
+    case "get_catalogs":
+        $data = getCatalogsForSales();
+        echo json_encode(["status" => "success", "data" => $data]);
+        break;
+
+    case "insert":
+        if (insertSale($post)) {
+            echo json_encode(["status" => "success"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al registrar la venta"]);
+        }
         break;
 
     default:
         echo json_encode(["status" => "error", "message" => "Acción inválida"]);
-        exit;
+        break;
 }
 ?>
