@@ -10,6 +10,11 @@ switch ($action) {
         echo json_encode(["status" => "success", "data" => $data]);
         break;
 
+        case "delete_sale":
+        $ok = deleteSale($post['id_sale']);
+        echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Venta eliminada" : "No se pudo eliminar"]);
+        exit;
+
     case "get_catalogs":
         $data = getCatalogsForSales();
         echo json_encode(["status" => "success", "data" => $data]);
