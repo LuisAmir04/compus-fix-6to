@@ -415,4 +415,15 @@ function insertSale($datos) {
     }
 }
 
+function deleteSale($id_sale) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM sales WHERE id_sale = :id_sale");
+        $stmt->execute([':id_sale' => $id_sale]);
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 ?>
