@@ -32,15 +32,40 @@ function getAllCustomers() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function insertCustomer($name, $phone, $email) {
+function getCustomerById($id_customer) {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT customers(name, phone, email) VALUES (:name, :phone, :email)");
+    $stmt = $pdo->prepare("SELECT * FROM customers WHERE id_customer = :id_customer");
+    $stmt->execute(['id_customer' => $id_customer]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function insertCustomer($name, $email, $phone) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO customers(name, email, phone) VALUES (:name, :email, :phone)");
     return $stmt->execute([
         ':name' => $name,
-        ':phone' => $phone,
-        ':email' => $email
+        ':email' => $email,
+        ':phone' => $phone
     ]);
 }
+
+function updateCustomer($id_customer, $name, $phone , $email ) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE customers SET name = :name, email = :email, phone = :phone WHERE id_customer = :id_customer");
+    return $stmt->execute([
+        ':id_customer' => $id_customer,
+        ':name' => $name,
+        ':email' => $email,
+        ':phone' => $phone
+    ]);
+}
+
+function deleteCustomer($id_customer) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM customers WHERE id_customer = :id_customer");
+    return $stmt->execute([':id_customer' => $id_customer]);
+}
+
 
 function getAllUsers() {
     global $pdo;
