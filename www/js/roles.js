@@ -1,4 +1,7 @@
+import { cargarNavbar } from './navbar.js';
+
 document.addEventListener("DOMContentLoaded", () => {
+    cargarNavbar();
 
     const tbody = document.querySelector("#tbody");
     const form = document.querySelector("#formRol");
