@@ -426,4 +426,40 @@ function deleteSale($id_sale) {
     }
 }
 
+function getOrderById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM repair_orders WHERE id_order = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateRepairOrderRow($post) {
+    global $pdo;
+    $sql = "UPDATE repair_orders SET
+            id_customer = :id_customer,
+            id_device_type = :id_device_type,
+            id_service_type = :id_service_type,
+            id_user = :id_user,
+            brand_model = :brand_model,
+            reported_fault = :reported_fault,
+            technical_diagnosis = :technical_diagnosis,
+            final_price = :final_price,
+            id_status = :id_status
+            WHERE id_order = :id_order";
+            
+    $stmt = $pdo->prepare($sql);
+    return $stmt->execute([
+        ':id_customer' => $post['id_customer'],
+        ':id_device_type' => $post['id_device_type'],
+        ':id_service_type' => $post['id_service_type'],
+        ':id_user' => $post['id_user'],
+        ':brand_model' => $post['brand_model'],
+        ':reported_fault' => $post['reported_fault'],
+        ':technical_diagnosis' => $post['technical_diagnosis'],
+        ':final_price' => $post['final_price'],
+        ':id_status' => $post['id_status'],
+        ':id_order' => $post['id_order']
+    ]);
+}
+
 ?>

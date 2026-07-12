@@ -26,7 +26,7 @@ button.addEventListener("click", e => {
       if(json.data.id_role === 1) {
           window.location.href = "app/admin.html"; 
       } else {
-          window.location.href = "app/tecnico.html"; 
+          window.location.href = "repair_orders/"; 
       }
     } else {
       alert("Credenciales incorrectas.");

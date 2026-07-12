@@ -8,33 +8,66 @@
     <title>Ordenes de Reparación</title>
 </head>
 <body class="p-8">
-    <div class="flex justify-end mb-4">
-        <a href="formulario.html" class="btn btn-primary">Insertar nueva orden</a>
+    <div id="navbar-container"></div>
+
+    <div id="vista-tabla">
+        <div class="flex justify-end mb-4">
+            <button id="btnNuevaOrden" class="btn btn-primary">Insertar nueva orden</button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Cliente</th>
+                        <th>Tipo de Dispositivo</th>
+                        <th>Servicio</th>
+                        <th>ID Tecnico</th>
+                        <th>Marca de Dispositivo</th>
+                        <th>Reporte</th>
+                        <th>Diagnostico</th>
+                        <th>Precio Final</th>
+                        <th>Status</th>
+                        <th>Fecha de creación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre del Cliente</th>
-                    <th>Tipo de Dispositivo</th>
-                    <th>Servicio</th>
-                    <th>ID Tecnico</th>
-                    <th>Marca de Dispositivo</th>
-                    <th>Reporte</th>
-                    <th>Diagnostico</th>
-                    <th>Precio Final</th>
-                    <th>Status</th>
-                    <th>Fecha de creación</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+<div id="vista-formulario" class="hidden">
+    <div class="flex justify-start mb-4">
+        <button id="btnVolver" class="btn btn-secondary">← Volver a la tabla</button>
     </div>
+    
+    <h2 id="tituloFormulario" class="text-2xl font-bold mb-6">Nueva Orden de Reparación</h2>
+
+    <form id="formOrden" class="flex flex-col gap-4 max-w-lg">
+        
+        <input type="hidden" name="id_order" id="id_order">
+        
+        <select name="id_customer" class="select select-bordered w-full" required></select>
+        <select name="id_device_type" class="select select-bordered w-full" required></select>
+        <select name="id_service_type" class="select select-bordered w-full" required></select>
+        <select name="id_user" class="select select-bordered w-full" required></select>
+        
+        <input type="text" name="brand_model" placeholder="Marca de Dispositivo" class="input input-bordered w-full" required>
+        <textarea name="reported_fault" placeholder="Reporte" class="textarea textarea-bordered w-full" required></textarea>
+        <textarea name="technical_diagnosis" placeholder="Diagnóstico" class="textarea textarea-bordered w-full"></textarea>
+        <input type="number" step="0.01" name="final_price" placeholder="Precio Final" class="input input-bordered w-full" required>
+        
+        <select name="id_status" class="select select-bordered w-full" required></select>
+        
+        <button type="submit" class="btn btn-primary">Guardar Orden</button>
+    </form>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="../js/repair_orders.js"></script>
+    
+    <script type="module" src="../js/repair_orders.js"></script>
+    <script src="../js/navbar.js"></script>
 </body>
 </html>
