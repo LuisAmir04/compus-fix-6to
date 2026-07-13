@@ -8,27 +8,73 @@
     <title>Registros de Caja</title>
 </head>
 <body class="p-8">
+
     <div id="navbar-container"></div>
-    <div class="overflow-x-auto">
+
+    <div class="mb-4 flex gap-3">
+        <button id="btnAgregar" class="btn btn-primary">
+            Agregar
+        </button>
+    </div>
+
+    <div id="tableSection" class="overflow-x-auto">
         <table class="table table-zebra w-full">
-            <a href="agregar.html" class="btn btn-primary mb-4">Agregar</a>
             <thead>
                 <tr>
                     <th>ID Corte</th>
-                    <th>ID Tecnico</th>
+                    <th>ID Técnico</th>
                     <th>Hora de entrada</th>
                     <th>Dinero inicial</th>
                     <th>Hora de cierre</th>
                     <th>Dinero declarado</th>
                     <th>Acción</th>
-
                 </tr>
             </thead>
             <tbody id="tbody"></tbody>
         </table>
     </div>
 
-    <script src="../js/cash_register.js"></script>
+    <div id="addSection" class="hidden mt-10">
+        <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow">
+            <h2 class="text-2xl font-bold mb-4">Agregar Corte de Caja</h2>
+
+            <label class="block mb-2">Usuario</label>
+            <select id="id_user" class="select select-bordered w-full mb-4">
+                <option value="">Seleccione un usuario</option>
+            </select>
+
+            <label class="block mb-2">Dinero inicial</label>
+            <input type="number" id="initial_cash" class="input input-bordered w-full mb-4">
+
+            <div class="flex gap-3">
+                <button id="btnGuardar" type="button" class="btn btn-primary">Guardar</button>
+                <button id="btnCancelarAgregar" type="button" class="btn btn-ghost">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editSection" class="hidden mt-10">
+        <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow">
+            <h2 class="text-2xl font-bold mb-4">Editar Corte de Caja</h2>
+
+            <input type="hidden" id="edit_id_cut">
+
+            <label class="block mb-2">Dinero inicial</label>
+            <input type="number" id="edit_initial_cash" class="input input-bordered w-full mb-4">
+
+            <label class="block mb-2">Dinero declarado</label>
+            <input type="number" id="edit_declared_cash" class="input input-bordered w-full mb-4">
+
+            <div class="flex gap-3">
+                <button id="btnActualizar" type="button" class="btn btn-primary">Guardar cambios</button>
+                <button id="btnCancelar btn-warning" type="button" class="btn btn-error">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/navbar.js"></script>
+    <script src="../js/agregar_cash_register.js?v=2"></script>
+    <script type="module" src="../js/cash_register.js?v=4"></script>
 </body>
 </html>
