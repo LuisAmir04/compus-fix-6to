@@ -3,23 +3,77 @@ import {
     getCashRegisterById,
     updateCashRegister,
     deleteCashRegister
-} from "./api_cash_register.js?v=3";
+} from "./api_cash_register.js?v=4";
 
 document.addEventListener("DOMContentLoaded", () => {
-    loadCashRegisters();
-
+    const tbody = document.getElementById("tbody");
+    const btnAgregar = document.getElementById("btnAgregar");
+    const btnCancelarAgregar = document.getElementById("btnCancelarAgregar");
     const btnActualizar = document.getElementById("btnActualizar");
     const btnCancelar = document.getElementById("btnCancelar");
+    const tableSection = document.getElementById("tableSection");
+    const addSection = document.getElementById("addSection");
+    const editSection = document.getElementById("editSection");
+    const navbar = document.getElementById("navbar-container");
 
-    if (btnActualizar) btnActualizar.addEventListener("click", guardarEdicion);
-    if (btnCancelar) btnCancelar.addEventListener("click", cerrarEdicion);
+    loadCashRegisters();
+
+    if (tbody) {
+        tbody.addEventListener("click", (event) => {
+            const editButton = event.target.closest(".btn-editar");
+            const deleteButton = event.target.closest(".btn-eliminar");
+
+            if (editButton && editButton.dataset.id) {
+                editar(editButton.dataset.id);
+            }
+
+            if (deleteButton && deleteButton.dataset.id) {
+                eliminar(deleteButton.dataset.id);
+            }
+        });
+    }
+
+    if (btnAgregar) {
+        btnAgregar.addEventListener("click", () => {
+            if (tableSection) tableSection.classList.add("hidden");
+            if (editSection) editSection.classList.add("hidden");
+            if (navbar) navbar.classList.add("hidden");
+            btnAgregar.classList.add("hidden");
+
+            if (addSection) {
+                addSection.classList.remove("hidden");
+                addSection.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    }
+
+    if (btnCancelarAgregar) {
+        btnCancelarAgregar.addEventListener("click", () => {
+            resetAddForm();
+
+            if (addSection) addSection.classList.add("hidden");
+            if (tableSection) tableSection.classList.remove("hidden");
+            if (navbar) navbar.classList.remove("hidden");
+            if (btnAgregar) btnAgregar.classList.remove("hidden");
+        });
+    }
+
+    if (btnActualizar) {
+        btnActualizar.addEventListener("click", guardarEdicion);
+    }
+
+    if (btnCancelar) {
+        btnCancelar.addEventListener("click", cerrarEdicion);
+    }
 });
 
 function loadCashRegisters() {
     getCashRegisters()
         .then(json => {
             if (json.status === "success") {
-                const tbody = document.querySelector("#tbody");
+                const tbody = document.getElementById("tbody");
+                if (!tbody) return;
+
                 tbody.innerHTML = "";
 
                 json.data.forEach(order => {
@@ -33,24 +87,24 @@ function loadCashRegisters() {
                             <td class="px-6 py-4 text-sm text-gray-700">${order.declared_cash ?? ""}</td>
                             <td class="px-6 py-4">
                                 <div class="flex gap-2">
-                                    <button class="btn btn-sm btn-warning btn-editar" data-id="${order.id_cut}">✏️ Editar</button>
-                                    <button class="btn btn-sm btn-error btn-eliminar" data-id="${order.id_cut}">🗑️ Eliminar</button>
+                                    <button class="btn btn-sm btn-warning btn-editar" data-id="${order.id_cut}">
+                                        ✏️ Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-error btn-eliminar" data-id="${order.id_cut}">
+                                        🗑️ Eliminar
+                                    </button>
                                 </div>
                             </td>
                         </tr>
                     `;
                 });
-
-                document.querySelectorAll(".btn-editar").forEach(btn => {
-                    btn.addEventListener("click", () => editar(btn.dataset.id));
-                });
-
-                document.querySelectorAll(".btn-eliminar").forEach(btn => {
-                    btn.addEventListener("click", () => eliminar(btn.dataset.id));
-                });
+            } else {
+                console.error(json.message || "No se pudo cargar la tabla");
             }
         })
-        .catch(err => console.error(err));
+        .catch(error => {
+            console.error("Error al cargar registros:", error);
+        });
 }
 
 function editar(id_cut) {
@@ -68,8 +122,17 @@ function editar(id_cut) {
                 const table = document.getElementById("tableSection");
                 const btnAgregar = document.getElementById("btnAgregar");
                 const navbar = document.getElementById("navbar-container");
+                const addSection = document.getElementById("addSection");
 
-                if (!idInput || !initialInput || !declaredInput || !section || !table || !btnAgregar) {
+                if (
+                    !idInput ||
+                    !initialInput ||
+                    !declaredInput ||
+                    !section ||
+                    !table ||
+                    !btnAgregar ||
+                    !navbar
+                ) {
                     Swal.fire("Error", "Falta agregar algún id en index.html", "error");
                     return;
                 }
@@ -78,15 +141,12 @@ function editar(id_cut) {
                 initialInput.value = json.data.initial_cash ?? "";
                 declaredInput.value = json.data.declared_cash ?? "";
 
+                if (addSection) addSection.classList.add("hidden");
                 table.classList.add("hidden");
                 btnAgregar.classList.add("hidden");
-
-                if (navbar) {
-                         navbar.classList.add("hidden");
-                }
+                navbar.classList.add("hidden");
 
                 section.classList.remove("hidden");
-                section.scrollIntoView({ behavior: "smooth" });
                 section.scrollIntoView({ behavior: "smooth" });
             } else {
                 Swal.fire("Error", json.message || "No se pudo cargar el registro", "error");
@@ -108,51 +168,78 @@ function eliminar(id_cut) {
         cancelButtonText: "Cancelar"
     }).then(result => {
         if (result.isConfirmed) {
-            deleteCashRegister(id_cut).then(json => {
-                if (json.status === "success") {
-                    Swal.fire("Eliminado", "El registro fue eliminado.", "success").then(() => {
-                        loadCashRegisters();
-                    });
-                } else {
-                    Swal.fire("Error", json.message || "No se pudo eliminar", "error");
-                }
-            });
+            deleteCashRegister(id_cut)
+                .then(json => {
+                    if (json.status === "success") {
+                        Swal.fire("Eliminado", "El registro fue eliminado.", "success").then(() => {
+                            loadCashRegisters();
+                        });
+                    } else {
+                        Swal.fire("Error", json.message || "No se pudo eliminar", "error");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error al eliminar:", error);
+                    Swal.fire("Error", "No se pudo eliminar", "error");
+                });
         }
     });
 }
 
 function guardarEdicion() {
-    const id_cut = document.getElementById("edit_id_cut").value;
-    const initial_cash = document.getElementById("edit_initial_cash").value;
-    const declared_cash = document.getElementById("edit_declared_cash").value;
+    const id_cut = document.getElementById("edit_id_cut")?.value || "";
+    const initial_cash = document.getElementById("edit_initial_cash")?.value || "";
+    const declared_cash = document.getElementById("edit_declared_cash")?.value || "";
+
+    if (!id_cut) {
+        Swal.fire("Error", "No se encontró el ID del corte.", "error");
+        return;
+    }
 
     updateCashRegister({
         id_cut,
         initial_cash,
         declared_cash
-    }).then(json => {
-        if (json.status === "success") {
-            Swal.fire("Listo", "Registro actualizado correctamente", "success");
-            cerrarEdicion();
-            loadCashRegisters();
-        } else {
-            Swal.fire("Error", json.message || "No se pudo actualizar", "error");
-        }
-    });
+    })
+        .then(json => {
+            if (json.status === "success") {
+                Swal.fire("Listo", "Registro actualizado correctamente", "success").then(() => {
+                    cerrarEdicion();
+                    loadCashRegisters();
+                });
+            } else {
+                Swal.fire("Error", json.message || "No se pudo actualizar", "error");
+            }
+        })
+        .catch(error => {
+            console.error("Error al actualizar:", error);
+            Swal.fire("Error", "No se pudo actualizar", "error");
+        });
 }
 
 function cerrarEdicion() {
-
-    document.getElementById("edit_id_cut").value = "";
-    document.getElementById("edit_initial_cash").value = "";
-    document.getElementById("edit_declared_cash").value = "";
-
-    document.getElementById("editSection").classList.add("hidden");
-    document.getElementById("tableSection").classList.remove("hidden");
-    document.getElementById("btnAgregar").classList.remove("hidden");
-
+    const idInput = document.getElementById("edit_id_cut");
+    const initialInput = document.getElementById("edit_initial_cash");
+    const declaredInput = document.getElementById("edit_declared_cash");
+    const section = document.getElementById("editSection");
+    const table = document.getElementById("tableSection");
+    const btnAgregar = document.getElementById("btnAgregar");
     const navbar = document.getElementById("navbar-container");
-    if (navbar) {
-        navbar.classList.remove("hidden");
-    }
+
+    if (idInput) idInput.value = "";
+    if (initialInput) initialInput.value = "";
+    if (declaredInput) declaredInput.value = "";
+
+    if (section) section.classList.add("hidden");
+    if (table) table.classList.remove("hidden");
+    if (btnAgregar) btnAgregar.classList.remove("hidden");
+    if (navbar) navbar.classList.remove("hidden");
+}
+
+function resetAddForm() {
+    const userSelect = document.getElementById("id_user");
+    const initialCash = document.getElementById("initial_cash");
+
+    if (userSelect) userSelect.value = "";
+    if (initialCash) initialCash.value = "";
 }
