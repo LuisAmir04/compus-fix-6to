@@ -1,6 +1,11 @@
 <?php
 require_once 'lib/functions.php';
 
+if (!isset($_SESSION['id_user'])) {
+    echo json_encode(["status" => "error", "message" => "Acceso denegado. Sesión no válida."]);
+    exit;
+}
+
 $post = json_decode(file_get_contents("php://input"), true);
 $action = $post['action'] ?? '';
 
@@ -35,6 +40,7 @@ case "update":
     case 'check_status':
         echo json_encode(checkShiftStatus($post['id_user']));
         break;
+        
 
     case 'open_shift':
         echo json_encode(openShift($post));
