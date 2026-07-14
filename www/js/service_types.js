@@ -1,59 +1,83 @@
+import { peticionST } from './st_api.js';
+import { alternarVistasST, pintarTablaST } from './st_ui.js';
+import { procesarGuardadoST, procesarEdicionST } from './st_form.js';
+
+const vistaTabla = document.querySelector("#vista-tabla");
+const vistaFormulario = document.querySelector("#vista-formulario");
+const btnNuevo = document.querySelector("#btnNuevo");
+const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
+const form = document.querySelector("#formServiceType");
+
+document.addEventListener("DOMContentLoaded", () => {
+    cargarTabla();
+});
+
+async function cargarTabla() {
+    const json = await peticionST({ action: "getAll" });
+    if (json.status === "success") {
+        pintarTablaST(tbody, json.data);
+    }
+}
+
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+        form.reset();
+        document.querySelector("#id_service_type").value = ""; 
+        document.querySelector("#tituloFormulario").textContent = "Registrar tipo de servicio";
+        alternarVistasST(vistaFormulario, vistaTabla);
+    });
+}
+
+if (btnVolver) {
+    btnVolver.addEventListener('click', (e) => {
+        e.preventDefault();
+        alternarVistasST(vistaTabla, vistaFormulario);
+    });
+}
+
+if (form) {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const respuesta = await procesarGuardadoST(form);
+        
+        Swal.fire(respuesta.status === "success" ? "Éxito" : "Error", respuesta.message, respuesta.status);
+        
+        if (respuesta.status === "success") {
+            cargarTabla();
+            alternarVistasST(vistaTabla, vistaFormulario);
+        }
+    });
+}
 
 if (tbody) {
-fetch("../php/service_types.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "getAll" })
-})
-.then(res => res.json())
-.then(json => {
-    if (json.status === "success") {
+    tbody.addEventListener('click', async function(evento) {
         
-        tbody.innerHTML = ""; 
-        
-        json.data.forEach(order => {
-            tbody.innerHTML += `
-<tr>
-                    <td class="px-6 py-4 text-sm text-gray-700">${order.id_service_type}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700">${order.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700">
-                        <a href="editar.html" class="link link-primary">editar</a>
-                        <a href="eliminar.html" class="link link-error ml-2">eliminar</a>
-                    </td>   
+        if (evento.target && evento.target.matches('.btn-editar')) {
+            const id = evento.target.getAttribute('data-id');
+            const tituloFormulario = document.querySelector("#tituloFormulario");
+            
+            await procesarEdicionST(id, form, tituloFormulario, vistaFormulario, vistaTabla);
+        }
 
-                </tr>
-            `;
-        });
-    } else {
-        console.error("Error o tabla vacía:", json.message);
-    }
-})
-.catch(error => console.error("Error en la petición:", error));
-}
-if (!tbody) {
-    const Nombre = document.querySelector("#Nombre");
-    const btnGuardar = document.querySelector("#btnGuardar");
-
-    btnGuardar.addEventListener("click", e => {
-        e.preventDefault();
-
-        const payload = {
-            action: "insert",
-            name: Nombre.value
-        };
-
-        fetch("../php/service_types.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(json => {
-            if (json.status === "success") {
-                window.location.href = "index.html";
-            }
-        })
-        .catch(error => console.error("Error en la petición:", error));
+        if (evento.target && evento.target.matches('.btn-eliminar')) {
+            const id = evento.target.getAttribute('data-id');
+            
+            Swal.fire({
+                title: "¿Eliminar este servicio?",
+                text: "Si está en uso por alguna orden, no se podrá borrar.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const respuesta = await peticionST({ action: "delete", id_service_type: id });
+                    Swal.fire(respuesta.status === "success" ? "Borrado" : "Error", respuesta.message, respuesta.status);
+                    cargarTabla();
+                } 
+            });
+        }
     });
 }
