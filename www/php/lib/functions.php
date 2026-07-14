@@ -547,4 +547,31 @@ function deleteServiceType($id) {
     }
 }
 
+function getStatusById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM statuses WHERE id_status = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateStatus($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE statuses SET name = :name WHERE id_status = :id");
+    return $stmt->execute([
+        ':name' => $datos['name'], 
+        ':id' => $datos['id_status']
+    ]);
+}
+
+function deleteStatus($id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM statuses WHERE id_status = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 ?>

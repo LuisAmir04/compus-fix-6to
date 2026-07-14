@@ -1,67 +1,83 @@
-const btnGuardar = document.querySelector("#btnGuardar")
-const tbody = document.querySelector("#tbody")
+import { peticionStat } from './stat_api.js';
+import { alternarVistasStat, pintarTablaStat } from './stat_ui.js';
+import { procesarGuardadoStat, procesarEdicionStat } from './stat_form.js';
 
-fetch("../php/statuses.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "getAll" })
-})
-.then(res => res.json())
-.then(json => {
+const vistaTabla = document.querySelector("#vista-tabla");
+const vistaFormulario = document.querySelector("#vista-formulario");
+const btnNuevo = document.querySelector("#btnNuevo");
+const btnVolver = document.querySelector("#btnVolver");
+const tbody = document.querySelector("#tbody");
+const form = document.querySelector("#formStatus");
+
+document.addEventListener("DOMContentLoaded", () => {
+    cargarTabla();
+});
+
+async function cargarTabla() {
+    const json = await peticionStat({ action: "getAll" });
     if (json.status === "success") {
-        const tbody = document.querySelector("#tbody");
-        
-        tbody.innerHTML = ""; 
-        
-        json.data.forEach(order => {
-            tbody.innerHTML += `
-<tr>
-                    <td class="px-6 py-4 text-sm text-gray-700">${order.id_status}</td>
-                    <td class="px-6 py-4 text-sm text-gray-700">${order.name}</td>
-                    <td class="px-6 py-4 text-sm flex gap-2">
-                            <a href="editar.html?id=${order.id_status}" class="bg-indigo-700 text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-indigo-800 transition shadow-sm">
-                                Editar
-                            </a>
-                            <a href="eliminar.html?id=${order.id_status}" class="bg-rose-500 text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-rose-600 transition shadow-sm">
-                                Eliminar
-                            </a>
-                        </td>
-
-                </tr>
-            `;
-        });
-    } else {
-        console.error("Error o tabla vacía:", json.message);
+        pintarTablaStat(tbody, json.data);
     }
-})
-.catch(error => console.error("Error en la petición:", error));
+}
 
-if (!tbody) {
-    const statusName = document.querySelector("#statusName")
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+        form.reset();
+        document.querySelector("#id_status").value = ""; 
+        document.querySelector("#tituloFormulario").textContent = "Registrar Nuevo Estatus";
+        alternarVistasStat(vistaFormulario, vistaTabla);
+    });
+}
 
-    if (btnGuardar) {
-        btnGuardar.addEventListener("click", e => {
-            e.preventDefault();
+if (btnVolver) {
+    btnVolver.addEventListener('click', (e) => {
+        e.preventDefault();
+        alternarVistasStat(vistaTabla, vistaFormulario);
+    });
+}
+
+if (form) {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const respuesta = await procesarGuardadoStat(form);
+        
+        Swal.fire(respuesta.status === "success" ? "Éxito" : "Error", respuesta.message, respuesta.status);
+        
+        if (respuesta.status === "success") {
+            cargarTabla();
+            alternarVistasStat(vistaTabla, vistaFormulario);
+        }
+    });
+}
+
+if (tbody) {
+    tbody.addEventListener('click', async function(evento) {
+        
+        if (evento.target && evento.target.matches('.btn-editar')) {
+            const id = evento.target.getAttribute('data-id');
+            const tituloFormulario = document.querySelector("#tituloFormulario");
             
-            const payload = {
-                action: "insert",
-                name: statusName.value
-            }
+            await procesarEdicionStat(id, form, tituloFormulario, vistaFormulario, vistaTabla);
+        }
 
-            fetch("../php/statuses.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(json => {
-                if (json.status === "success") {
-                    window.location.href = "index.html"; 
-                } else {
-                    alert("Error al guardar");
-                }
-            })
-            .catch(err => console.error("Error:", err));
-        });
-    }
-    }
+        if (evento.target && evento.target.matches('.btn-eliminar')) {
+            const id = evento.target.getAttribute('data-id');
+            
+            Swal.fire({
+                title: "¿Eliminar este estatus?",
+                text: "Si está en uso por alguna orden, no se podrá borrar.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const respuesta = await peticionStat({ action: "delete", id_status: id });
+                    Swal.fire(respuesta.status === "success" ? "Borrado" : "Error", respuesta.message, respuesta.status);
+                    cargarTabla();
+                } 
+            });
+        }
+    });
+}
