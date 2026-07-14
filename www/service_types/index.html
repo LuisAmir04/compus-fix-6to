@@ -10,22 +10,46 @@
 <body class="p-8">
     <div id="navbar-container"></div>
 
-    <a href="insertar.html" class="btn btn-primary mb-4">Insertar</a>
+    <div id="vista-tabla">
+        <div class="flex justify-start mb-4">
+            <button id="btnNuevo" class="btn btn-primary">Insertar nuevo servicio</button>
+        </div>
 
-    <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre del Servicio</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre del Servicio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <script src="../js/service_types.js"></script>
+    <div id="vista-formulario" class="hidden">
+        <div class="flex justify-start mb-4">
+            <button id="btnVolver" class="btn btn-secondary">← Volver a la tabla</button>
+        </div>
+
+        <form id="formServiceType" class="max-w-md">
+            <h2 id="tituloFormulario" class="text-xl font-bold mb-4">Registrar tipo de servicio</h2>
+            
+            <input type="hidden" name="id_service_type" id="id_service_type">
+
+            <div class="mb-4">
+                <label for="name" class="label">Nombre</label>
+                <input type="text" id="name" name="name" required class="input input-bordered w-full">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/navbar.js"></script>
+    <script type="module" src="../js/service_types.js"></script>
 </body>
 </html>

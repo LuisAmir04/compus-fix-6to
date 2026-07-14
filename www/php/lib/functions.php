@@ -493,4 +493,58 @@ function updateRepairOrderRow($post) {
     ]);
 }
 
+function getDeviceTypeById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM device_types WHERE id_device_type = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateDeviceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE device_types SET name = :name WHERE id_device_type = :id");
+    return $stmt->execute([
+        ':name' => $datos['name'], 
+        ':id' => $datos['id_device_type']
+    ]);
+}
+
+function deleteDeviceType($id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM device_types WHERE id_device_type = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
+function getServiceTypeById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM service_types WHERE id_service_type = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateServiceType($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE service_types SET name = :name WHERE id_service_type = :id");
+    return $stmt->execute([
+        ':name' => $datos['name'], 
+        ':id' => $datos['id_service_type']
+    ]);
+}
+
+function deleteServiceType($id) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM service_types WHERE id_service_type = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() > 0;
+    } catch (PDOException $e) {
+        return false;
+    }
+}
+
 ?>
