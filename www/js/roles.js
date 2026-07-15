@@ -1,107 +1,85 @@
-import { cargarNavbar } from './navbar.js';
+import { peticionRol } from './rol_api.js';
+import { alternarVistasRol, pintarTablaRol } from './rol_ui.js';
+import { procesarGuardadoRol, procesarEdicionRol } from './rol_form.js';
+
+const vistaTabla = document.querySelector("#vista-tabla");
+const vistaFormulario = document.querySelector("#vista-formulario");
+const btnNuevo = document.querySelector("#btnNuevo");
+const btnVolver = document.querySelector("#btnVolver");
+const tbody = document.querySelector("#tbody");
+const form = document.querySelector("#formRol");
 
 document.addEventListener("DOMContentLoaded", () => {
-    cargarNavbar();
-
-    const tbody = document.querySelector("#tbody");
-    const form = document.querySelector("#formRol");
-    const idInput = document.querySelector("#id_role");
-    const nameInput = document.querySelector("#name");
-    const btnNuevo = document.querySelector("#btnNuevo");
-    const btnCancelar = document.querySelector("#btnCancelar");
-    const msgArea = document.querySelector("#msgArea");
-
-    function mostrarMensaje(texto, tipo) {
-        const clase = tipo === "success" ? "alert-success" : "alert-error";
-        msgArea.innerHTML = `<div class="alert ${clase}"><span>${texto}</span></div>`;
-        setTimeout(() => { msgArea.innerHTML = ""; }, 3000);
-    }
-
-    function cargarRoles() {
-        fetch("../php/roles.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "getAll" })
-        })
-        .then(res => res.json())
-        .then(json => {
-            console.log("Respuesta:", json);
-
-            if (!tbody) {
-                console.error("No existe #tbody en el HTML");
-                return;
-            }
-
-            if (json.status === "success" && json.data.length > 0) {
-                tbody.innerHTML = json.data.map(d => `
-                    <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">#${d.id_role}</td>
-
-                        <td class="px-6 py-4 text-sm text-gray-700 font-semibold">
-                            ${d.name}
-                        </td>
-
-                        <td class="px-6 py-4 text-sm text-gray-700">
-                            <button class="text-black hover:underline text-sm mr-3">Editar</button>
-                            <button class="text-black hover:underline text-sm">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="3" class="text-center py-4 text-gray-500">
-                            No hay datos disponibles
-                        </td>
-                    </tr>
-                `;
-            }
-        })
-        .catch(err => {
-            console.error("Error en fetch:", err);
-        });
-    }
-
-    function abrirNuevo() {
-        idInput.value = "";
-        nameInput.value = "";
-        form.classList.remove("hidden");
-    }
-
-    btnNuevo.addEventListener("click", abrirNuevo);
-
-    btnCancelar.addEventListener("click", () => {
-        form.classList.add("hidden");
-        form.reset();
-        idInput.value = "";
-    });
-
-    form.addEventListener("submit", e => {
-        e.preventDefault();
-
-        const id_role = idInput.value;
-        const name = nameInput.value.trim();
-        const action = id_role ? "update" : "insert";
-
-        fetch("../php/roles.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action, id_role, name })
-        })
-        .then(res => res.json())
-        .then(json => {
-            console.log("Respuesta:", json);
-            mostrarMensaje(json.message, json.status);
-            if (json.status === "success") {
-                form.classList.add("hidden");
-                form.reset();
-                idInput.value = "";
-                cargarRoles();
-            }
-        })
-        .catch(err => console.error("Error en fetch:", err));
-    });
-
-    cargarRoles();
-
+    cargarTabla();
 });
+
+async function cargarTabla() {
+    const json = await peticionRol({ action: "getAll" });
+    if (json.status === "success") {
+        pintarTablaRol(tbody, json.data);
+    } else {
+        pintarTablaRol(tbody, []);
+    }
+}
+
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+        form.reset();
+        document.querySelector("#id_role").value = ""; 
+        document.querySelector("#tituloFormulario").textContent = "Registrar Nuevo Rol";
+        vistaFormulario.classList.remove('hidden');
+    });
+}
+
+if (btnVolver) {
+    btnVolver.addEventListener('click', () => {
+        vistaFormulario.classList.add('hidden');
+    });
+}
+
+if (form) {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const respuesta = await procesarGuardadoRol(form);
+        
+        Swal.fire(respuesta.status === "success" ? "Éxito" : "Error", respuesta.message, respuesta.status);
+        
+        if (respuesta.status === "success") {
+            cargarTabla();
+            vistaFormulario.classList.add('hidden');
+        }
+    });
+}
+
+if (tbody) {
+    tbody.addEventListener('click', async function(evento) {
+        
+        if (evento.target && evento.target.matches('.btn-editar')) {
+            const id = evento.target.getAttribute('data-id');
+            const tituloFormulario = document.querySelector("#tituloFormulario");
+            
+            await procesarEdicionRol(id, form, tituloFormulario, vistaFormulario, vistaTabla);
+        }
+
+        if (evento.target && evento.target.matches('.btn-eliminar')) {
+            const id = evento.target.getAttribute('data-id');
+            
+            Swal.fire({
+                title: "¿Eliminar este rol?",
+                text: "No se podrá borrar si hay usuarios que tengan este rol asignado.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Sí, eliminar"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const respuesta = await peticionRol({ action: "delete", id_role: id });
+                    Swal.fire(respuesta.status === "success" ? "Borrado" : "Error", respuesta.message, respuesta.status);
+                    
+                    if (respuesta.status === "success") cargarTabla();
+                } 
+            });
+        }
+    });
+}

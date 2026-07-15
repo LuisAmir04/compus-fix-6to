@@ -9,42 +9,41 @@
 </head>
 <body class="p-8">
     <div id="navbar-container"></div>
-    <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold">Roles</h1>
-    <button id="btnNuevo" class="text-black hover:underline font-semibold">+ Nuevo Rol</button>
-</div>
-
-<div id="msgArea" class="mb-4"></div>
-<form id="formRol" class="hidden flex gap-2 items-end mb-6">
-    <input type="hidden" id="id_role">
-
-    <div>
-        <label class="label" for="name">Nombre del rol</label>
-        <input
-            type="text"
-            id="name"
-            name="name"
-            class="input input-bordered"
-            required>
+    
+    <div class="flex mb-4">
+        <button id="btnNuevo" class="text-black hover:underline font-semibold">+ Nuevo Rol</button>
     </div>
 
-    <button
-        type="submit"
-        id="btnGuardar"
-        class="text-black hover:underline font-semibold">
-        Guardar
-    </button>
+    <div id="msgArea" class="mb-4"></div>
 
-    <button
-        type="button"
-        id="btnCancelar"
-        class="text-black hover:underline">
-        Cancelar
-    </button>
-</form>
-    <div class="overflow-x-auto">
+    <div id="vista-formulario" class="hidden mb-8">
+        <div class="card bg-base-100 shadow-md border border-gray-200">
+            <form id="formRol" class="card-body p-6">
+                <h2 id="tituloFormulario" class="text-xl font-bold mb-4">Registrar Rol</h2>
+                
+                <input type="hidden" name="id_role" id="id_role">
+
+                <div class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="label font-semibold" for="name">Nombre del rol</label>
+                        <input type="text" id="name" name="name" class="input input-bordered w-full" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary font-semibold text-white px-8">
+                        Guardar
+                    </button>
+
+                    <button type="button" id="btnVolver" class="btn btn-outline">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="vista-tabla" class="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
         <table class="table table-zebra w-full">
-            <thead>
+            <thead class="bg-gray-50 text-gray-700">
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
@@ -55,7 +54,8 @@
         </table>
     </div>
 
-    <script src="../js/roles.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/navbar.js"></script>
+    <script type="module" src="../js/roles.js"></script>
 </body>
 </html>

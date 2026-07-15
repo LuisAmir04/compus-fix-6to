@@ -1,94 +1,67 @@
+import { peticionSal } from './sal_api.js';
+import { alternarVistasSal, pintarTablaSal } from './sal_ui.js';
+import { cargarCatalogosSal, procesarGuardadoSal, procesarEdicionSal } from './sal_form.js';
+
+const vistaTabla = document.querySelector("#vista-tabla");
+const vistaFormulario = document.querySelector("#vista-formulario");
+const btnNuevo = document.querySelector("#btnNuevo");
+const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
-const formNuevaVenta = document.querySelector("#formNuevaVenta");
+const form = document.querySelector("#formNuevaVenta");
 
-if (tbody) cargarVentas();
-if (formNuevaVenta) iniciarFormulario();
+document.addEventListener("DOMContentLoaded", () => {
+    if (tbody) cargarTabla();
+    if (form) cargarCatalogosSal(form);
+});
 
-function cargarVentas() {
-    fetch("../php/sales.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getAll" })
-    })
-    .then(res => res.json())
-    .then(json => {
-        if (json.status === "success") {
-            tbody.innerHTML = ""; 
-            json.data.forEach(sale => {
-                tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="px-6 py-4 font-bold text-sm text-gray-700">#${sale.id_sale}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">Orden #${sale.id_order}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">${sale.cashier_name}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">${sale.payment_method}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">$${sale.total_paid}</td>
-                        <td class="px-6 py-4 text-sm text-gray-700">${sale.sale_date}</td>
-                        <td class="px-6 py-4 text-sm">
-                            <a href="editar.html" class="text-blue-600 mr-2 hover:underline">editar</a> | 
-                            <a href="#" data-id="${sale.id_sale}" class="elim text-red-600 ml-2 hover:underline">eliminar</a>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+async function cargarTabla() {
+    const json = await peticionSal({ action: "getAll" });
+    if (json.status === "success") {
+        pintarTablaSal(tbody, json.data);
+    }
+}
+
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+        form.reset();
+        document.querySelector("#id_sale").value = ""; 
+        document.querySelector("#tituloFormulario").textContent = "Registrar Nueva Venta";
+        alternarVistasSal(vistaFormulario, vistaTabla);
     });
 }
 
-function iniciarFormulario() {
-    const selectOrder = document.querySelector("#id_order");
-    const selectUser = document.querySelector("#id_user");
-    
-    fetch("../php/sales.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get_catalogs" })
-    })
-    .then(res => res.json())
-    .then(json => {
-        if (json.status === "success") {
-            selectOrder.innerHTML = '<option value="">-- Selecciona --</option>';
-            json.data.orders.forEach(o => {
-                selectOrder.innerHTML += `<option value="${o.id_order}">Orden #${o.id_order} - ${o.customer_name}</option>`;
-            });
-
-            selectUser.innerHTML = '<option value="">-- Selecciona --</option>';
-            json.data.users.forEach(u => {
-                selectUser.innerHTML += `<option value="${u.id_user}">${u.username}</option>`;
-            });
-        }
+if (btnVolver) {
+    btnVolver.addEventListener('click', () => {
+        alternarVistasSal(vistaTabla, vistaFormulario);
     });
+}
 
-    formNuevaVenta.addEventListener("submit", (e) => {
+if (form) {
+    form.addEventListener("submit", async function(e) {
         e.preventDefault();
+        const respuesta = await procesarGuardadoSal(form);
         
-        const datos = {
-            action: "insert",
-            id_order: document.querySelector("#id_order").value,
-            id_user: document.querySelector("#id_user").value,
-            payment_method: document.querySelector("#payment_method").value,
-            total_paid: document.querySelector("#total_paid").value
-        };
-
-        fetch("../php/sales.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(datos)
-        })
-        .then(res => res.json())
-        .then(json => {
-            if (json.status === "success") {
-                window.location.href = "index.html"; 
-            } else {
-                alert(json.message);
-            }
-        });
+        if (respuesta.status === "success") {
+            Swal.fire("Éxito", respuesta.message, "success");
+            cargarTabla();
+            alternarVistasSal(vistaTabla, vistaFormulario);
+        } else {
+            Swal.fire("Error", respuesta.message, "error");
+        }
     });
 }
 
 if (tbody) {
-    tbody.addEventListener('click', function(evento) {
-        if (evento.target && evento.target.matches('.elim')) {
-            evento.preventDefault(); 
+    tbody.addEventListener('click', async function(evento) {
+        
+        if (evento.target && evento.target.matches('.btn-editar')) {
+            const id = evento.target.getAttribute('data-id');
+            const tituloFormulario = document.querySelector("#tituloFormulario");
+            
+            await procesarEdicionSal(id, form, tituloFormulario, vistaFormulario, vistaTabla);
+        }
+
+        if (evento.target && evento.target.matches('.btn-eliminar')) {
             const id = evento.target.getAttribute('data-id');
             
             Swal.fire({
@@ -100,24 +73,16 @@ if (tbody) {
                 cancelButtonColor: "#d33",
                 confirmButtonText: "Confirmar",
                 cancelButtonText: "Cancelar"
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    fetch("../php/sales.php", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ action: "delete_sale", id_sale: id })
-                    })
-                    .then(res => res.json())
-                    .then(json => {
-                        if (json.status === "success") {
-                            Swal.fire("Borrado", "La venta ha sido eliminada.", "success").then(() => {
-                                cargarVentas(); 
-                            });
-                        } else {
-                            Swal.fire("Error", json.message, "error");
-                        }
-                    })
-                    .catch(error => console.error("Error en la petición:", error));
+                    const json = await peticionSal({ action: "delete", id_sale: id });
+                    
+                    if (json.status === "success") {
+                        Swal.fire("Borrado", json.message, "success");
+                        cargarTabla();
+                    } else {
+                        Swal.fire("Error", json.message, "error");
+                    }
                 } 
             });
         }
