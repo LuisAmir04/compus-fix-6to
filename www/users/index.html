@@ -7,29 +7,72 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
     <title>Usuarios</title>
 </head>
-<body class="p-8">
+<body class="p-8 bg-slate-50">
     <div id="navbar-container"></div>
-    <h1 class="text-xl mb-4">Usuarios</h1>
-    <div class="mb-4">
-    <a href="insertar.html" class="btn btn-primary">
-         Insertar usuario
-    </a>
-</div>
-    <div class="overflow-x-auto">
-        <table class="table table-zebra w-full">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre de Usuario</th>
-                    <th>Rol</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-        </table>
+    
+    <div id="vista-tabla">
+        <div class="mb-4 flex">
+            <button id="btnNuevo" class="btn btn-primary">
+                + Insertar usuario
+            </button>
+        </div>
+        
+        <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+            <table class="table table-zebra w-full">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Usuario</th>
+                        <th>Rol</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <script src="../js/users.js"></script>
+    <div id="vista-formulario" class="hidden flex items-center justify-center py-8">
+        <div class="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+            <div class="bg-gray-600 px-8 py-6">
+                <h2 id="tituloFormulario" class="text-2xl font-bold text-white">
+                    Insertar usuario
+                </h2>
+            </div>
+
+            <form id="formUsers" class="p-8 space-y-4">
+                <input type="hidden" name="id_user" id="id_user">
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Nombre de usuario</label>
+                    <input type="text" id="username" name="username" required class="input input-bordered w-full">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="Dejar en blanco para no cambiar al editar" class="input input-bordered w-full">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Rol</label>
+                    <select id="id_role" name="id_role" required class="select select-bordered w-full">
+                        </select>
+                </div>
+
+                <div class="flex justify-end gap-4 mt-6">
+                    <button id="btnVolver" type="button" class="btn btn-outline btn-error">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success text-white">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../js/navbar.js"></script>
+    <script type="module" src="../js/users.js"></script>
 </body>
 </html>
