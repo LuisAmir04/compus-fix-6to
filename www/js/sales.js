@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.querySelector("#tbody");
     const formSale = document.getElementById("form-sale");
@@ -81,8 +82,60 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         })
         .catch(error => console.error("Error al procesar:", error));
+=======
+import { peticionSale } from './sales_api.js';
+import { alternarVistasSale, pintarTablaSale } from './sales_ui.js';
+import { cargarCatalogosSale, procesarGuardadoSale, procesarEdicionSale } from './sales_form.js';
+
+const vistaTabla = document.querySelector("#vista-tabla");
+const vistaFormulario = document.querySelector("#vista-formulario");
+const btnNuevo = document.querySelector("#btnNuevo");
+const btnVolver = document.querySelector("#btnVolver");
+const tbody = document.querySelector("#tbody");
+const form = document.querySelector("#formSales");
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (tbody) cargarTabla();
+    if (form) cargarCatalogosSale();
+});
+
+async function cargarTabla() {
+    const json = await peticionSale({ action: "getAll" });
+    if (json.status === "success") {
+        pintarTablaSale(tbody, json.data);
+    }
+}
+
+if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => {
+        form.reset();
+        document.querySelector("#id_sale").value = ""; 
+        document.querySelector("#tituloFormulario").textContent = "Registrar Nueva Venta";
+        alternarVistasSale(vistaFormulario, vistaTabla);
+    });
+}
+
+if (btnVolver) {
+    btnVolver.addEventListener('click', () => {
+        alternarVistasSale(vistaTabla, vistaFormulario);
+    });
+}
+
+if (form) {
+    form.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const respuesta = await procesarGuardadoSale(form);
+        
+        Swal.fire(respuesta.status === "success" ? "Éxito" : "Error", respuesta.message || "Ocurrió un error", respuesta.status);
+        
+        if (respuesta.status === "success") {
+            cargarTabla();
+            alternarVistasSale(vistaTabla, vistaFormulario);
+        }
+>>>>>>> Stashed changes
     });
 
+<<<<<<< Updated upstream
     // Asignar controladores dinámicos a los botones Editar/Eliminar
     function asignarEventosAcciones() {
         // Evento Editar
@@ -124,6 +177,41 @@ document.addEventListener("DOMContentLoaded", () => {
                     })
                     .catch(error => console.error("Error al eliminar:", error));
                 }
+=======
+if (tbody) {
+    tbody.addEventListener('click', async function(evento) {
+        
+        if (evento.target && evento.target.matches('.btn-editar')) {
+            evento.preventDefault();
+            const id = evento.target.getAttribute('data-id');
+            const tituloFormulario = document.querySelector("#tituloFormulario");
+            
+            await procesarEdicionSale(id, form, tituloFormulario, vistaFormulario, vistaTabla);
+        }
+
+        if (evento.target && evento.target.matches('.btn-eliminar')) {
+            evento.preventDefault();
+            const id = evento.target.getAttribute('data-id');
+            
+            Swal.fire({
+                title: "¿Estás seguro de eliminar esta venta?",
+                text: "¡No vas a poder revertir esto!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Confirmar",
+                cancelButtonText: "Cancelar"
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const respuesta = await peticionSale({ action: "delete_sale", id_sale: id });
+                    Swal.fire(respuesta.status === "success" ? "Borrado" : "Error", respuesta.message, respuesta.status);
+                    
+                    if (respuesta.status === "success") {
+                        cargarTabla();
+                    }
+                } 
+>>>>>>> Stashed changes
             });
         });
     }
