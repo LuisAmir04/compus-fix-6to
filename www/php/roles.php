@@ -14,6 +14,15 @@ switch ($action) {
         }
         break;
 
+    case "get_one":
+        $data = getRoleById($post['id_role']);
+        if ($data) {
+        echo json_encode(["status" => "success", "data" => $data]);
+        } else {
+        echo json_encode(["status" => "error", "message" => "Rol no encontrado"]);
+        }
+    break;
+
     case "insert":
         $resultado = insertRole($post);
         echo json_encode($resultado);

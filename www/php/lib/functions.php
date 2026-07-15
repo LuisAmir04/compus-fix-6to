@@ -574,4 +574,35 @@ function deleteStatus($id) {
     }
 }
 
+function getSaleById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM sales WHERE id_sale = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function updateSale($datos) {
+    global $pdo;
+    $stmt = $pdo->prepare("UPDATE sales SET 
+                            id_order = :id_order, 
+                            id_user = :id_user, 
+                            payment_method = :payment_method, 
+                            total_paid = :total_paid 
+                           WHERE id_sale = :id_sale");
+    return $stmt->execute([
+        ':id_order' => $datos['id_order'],
+        ':id_user' => $datos['id_user'],
+        ':payment_method' => $datos['payment_method'],
+        ':total_paid' => $datos['total_paid'],
+        ':id_sale' => $datos['id_sale']
+    ]);
+}
+
+function getRoleById($id) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM roles WHERE id_role = :id");
+    $stmt->execute(['id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 ?>

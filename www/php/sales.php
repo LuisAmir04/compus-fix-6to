@@ -10,10 +10,10 @@ switch ($action) {
         echo json_encode(["status" => "success", "data" => $data]);
         break;
 
-        case "delete_sale":
-        $ok = deleteSale($post['id_sale']);
-        echo json_encode(["status" => $ok ? "success" : "error", "message" => $ok ? "Venta eliminada" : "No se pudo eliminar"]);
-        exit;
+    case "get_one":
+        $data = getSaleById($post['id_sale']);
+        echo json_encode(["status" => "success", "data" => $data]);
+        break;
 
     case "get_catalogs":
         $data = getCatalogsForSales();
@@ -22,9 +22,25 @@ switch ($action) {
 
     case "insert":
         if (insertSale($post)) {
-            echo json_encode(["status" => "success"]);
+            echo json_encode(["status" => "success", "message" => "Venta registrada"]);
         } else {
             echo json_encode(["status" => "error", "message" => "Error al registrar la venta"]);
+        }
+        break;
+
+    case "update":
+        if (updateSale($post)) {
+            echo json_encode(["status" => "success", "message" => "Venta actualizada"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al actualizar la venta"]);
+        }
+        break;
+
+    case "delete":
+        if (deleteSale($post['id_sale'])) {
+            echo json_encode(["status" => "success", "message" => "Venta eliminada"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "No se pudo eliminar la venta"]);
         }
         break;
 
