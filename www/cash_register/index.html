@@ -19,17 +19,29 @@
 
     <div id="tableSection" class="overflow-x-auto">
         <table class="table table-zebra w-full">
-            <thead>
-                <tr>
-                    <th>ID Corte</th>
-                    <th>ID Técnico</th>
-                    <th>Hora de entrada</th>
-                    <th>Dinero inicial</th>
-                    <th>Hora de cierre</th>
-                    <th>Dinero declarado</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="id_cut">
+                            ID Corte <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="cashier_name">
+                            Cajero <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="opening_time">
+                            Hora de entrada <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="initial_cash">
+                            Dinero inicial <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="closing_time">
+                            Hora de cierre <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="declared_cash">
+                            Dinero declarado <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
             <tbody id="tbody"></tbody>
         </table>
     </div>
@@ -67,7 +79,7 @@
 
             <div class="flex gap-3">
                 <button id="btnActualizar" type="button" class="btn btn-primary">Guardar cambios</button>
-                <button id="btnCancelar btn-warning" type="button" class="btn btn-error">Cancelar</button>
+                <button id="btnCancelar" type="button" class="btn btn-error">Cancelar</button>
             </div>
         </div>
     </div>

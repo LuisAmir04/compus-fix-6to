@@ -5,8 +5,13 @@ import {
     deleteCashRegister
 } from "./api_cash_register.js?v=4";
 
+let datosActuales = [];
+let ordenAscendente = true;
+let columnaActual = "";
+
 document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("tbody");
+    const thead = document.querySelector("thead");
     const btnAgregar = document.getElementById("btnAgregar");
     const btnCancelarAgregar = document.getElementById("btnCancelarAgregar");
     const btnActualizar = document.getElementById("btnActualizar");
@@ -33,6 +38,36 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    if (thead) {
+        thead.addEventListener("click", (evento) => {
+            const th = evento.target.closest(".sortable");
+            if (!th) return; 
+
+            const columna = th.getAttribute("data-sort");
+            
+            if (columna === columnaActual) {
+                ordenAscendente = !ordenAscendente; 
+            } else {
+                ordenAscendente = true; 
+                columnaActual = columna; 
+            }
+
+            document.querySelectorAll(".sortable .sort-icon").forEach(icon => {
+                icon.textContent = "▴▾";
+                icon.classList.remove("text-blue-600");
+                icon.classList.add("text-gray-400");
+            });
+
+            const iconoActivo = th.querySelector(".sort-icon");
+            iconoActivo.textContent = ordenAscendente ? "▴" : "▾";
+            iconoActivo.classList.remove("text-gray-400");
+            iconoActivo.classList.add("text-blue-600");
+
+            datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
+            pintarTablaCaja(datosActuales);
+        });
+    }
+
     if (btnAgregar) {
         btnAgregar.addEventListener("click", () => {
             if (tableSection) tableSection.classList.add("hidden");
@@ -50,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnCancelarAgregar) {
         btnCancelarAgregar.addEventListener("click", () => {
             resetAddForm();
-
             if (addSection) addSection.classList.add("hidden");
             if (tableSection) tableSection.classList.remove("hidden");
             if (navbar) navbar.classList.remove("hidden");
@@ -67,37 +101,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+
 function loadCashRegisters() {
     getCashRegisters()
         .then(json => {
             if (json.status === "success") {
-                const tbody = document.getElementById("tbody");
-                if (!tbody) return;
-
-                tbody.innerHTML = "";
-
-                json.data.forEach(order => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.id_cut}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.cashier_name}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.opening_time}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.initial_cash}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.closing_time ?? ""}</td>
-                            <td class="px-6 py-4 text-sm text-gray-700">${order.declared_cash ?? ""}</td>
-                            <td class="px-6 py-4">
-                                <div class="flex gap-2">
-                                    <button class="btn btn-sm btn-warning btn-editar" data-id="${order.id_cut}">
-                                        ✏️ Editar
-                                    </button>
-                                    <button class="btn btn-sm btn-error btn-eliminar" data-id="${order.id_cut}">
-                                        🗑️ Eliminar
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
+                datosActuales = json.data; 
+                pintarTablaCaja(datosActuales);
             } else {
                 console.error(json.message || "No se pudo cargar la tabla");
             }
@@ -107,13 +117,57 @@ function loadCashRegisters() {
         });
 }
 
-function editar(id_cut) {
-    console.log("Editar ID:", id_cut);
+function pintarTablaCaja(datos) {
+    const tbody = document.getElementById("tbody");
+    if (!tbody) return;
 
+    tbody.innerHTML = "";
+
+    datos.forEach(order => {
+        tbody.innerHTML += `
+            <tr>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.id_cut}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.cashier_name}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.opening_time}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.initial_cash}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.closing_time ?? ""}</td>
+                <td class="px-6 py-4 text-sm text-gray-700">${order.declared_cash ?? ""}</td>
+                <td class="px-6 py-4">
+                    <div class="flex gap-2">
+                        <button class="btn btn-sm btn-warning btn-editar" data-id="${order.id_cut}">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-sm btn-error btn-eliminar" data-id="${order.id_cut}">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function ordenarDatosTabla(datos, columna, ascendente) {
+    return datos.sort((a, b) => {
+        let valA = a[columna] !== null ? a[columna] : '';
+        let valB = b[columna] !== null ? b[columna] : '';
+
+        if (!isNaN(valA) && !isNaN(valB) && valA !== '' && valB !== '') {
+            return ascendente ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
+        }
+
+        valA = valA.toString().toLowerCase();
+        valB = valB.toString().toLowerCase();
+
+        if (valA < valB) return ascendente ? -1 : 1;
+        if (valA > valB) return ascendente ? 1 : -1;
+        return 0; 
+    });
+}
+
+function editar(id_cut) {
     getCashRegisterById(id_cut)
         .then(json => {
-            console.log("Respuesta completa:", JSON.stringify(json, null, 2));
-
             if (json.status === "success" && json.data) {
                 const idInput = document.getElementById("edit_id_cut");
                 const initialInput = document.getElementById("edit_initial_cash");
@@ -124,15 +178,7 @@ function editar(id_cut) {
                 const navbar = document.getElementById("navbar-container");
                 const addSection = document.getElementById("addSection");
 
-                if (
-                    !idInput ||
-                    !initialInput ||
-                    !declaredInput ||
-                    !section ||
-                    !table ||
-                    !btnAgregar ||
-                    !navbar
-                ) {
+                if (!idInput || !initialInput || !declaredInput || !section || !table || !btnAgregar || !navbar) {
                     Swal.fire("Error", "Falta agregar algún id en index.html", "error");
                     return;
                 }

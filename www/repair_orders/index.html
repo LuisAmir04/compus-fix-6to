@@ -18,18 +18,39 @@
         <div class="overflow-x-auto">
             <table class="table table-zebra w-full">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre del Cliente</th>
-                        <th>Tipo de Dispositivo</th>
-                        <th>Servicio</th>
-                        <th>ID Tecnico</th>
-                        <th>Marca de Dispositivo</th>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="id_order">
+                            ID <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="customer_name">
+                            Nombre del Cliente <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="device_type">
+                            Tipo de Dispositivo <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="service_type">
+                            Servicio <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="technician_name">
+                            Técnico <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="brand_model">
+                            Marca de Dispositivo <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th> 
+
                         <th>Reporte</th>
                         <th>Diagnostico</th>
-                        <th>Precio Final</th>
-                        <th>Status</th>
-                        <th>Fecha de creación</th>
+
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="final_price">
+                            Precio Final <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="current_status">
+                            Status <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="created_at">
+                            Fecha de creación <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th> 
                         <th>Acciones</th>
                     </tr>
                 </thead>
