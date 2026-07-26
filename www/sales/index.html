@@ -16,17 +16,29 @@
         </div>
         
         <table class="table table-zebra w-full">
-            <thead>
-                <tr>
-                    <th>ID Venta</th>
-                    <th>ID Orden</th>
-                    <th>Cajero / Técnico</th>
-                    <th>Método de pago</th>
-                    <th>Total pagado</th>
-                    <th>Fecha de venta</th>
-                    <th>Acciones</th> 
-                </tr>
-            </thead>
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="id_sale">
+                            ID Venta <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="brand_model">
+                            Orden / Dispositivo <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="cashier_name">
+                            Cajero / Técnico <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="payment_method">
+                            Método de pago <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="total_paid">
+                            Total pagado <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th class="cursor-pointer hover:bg-gray-200 select-none sortable transition-colors" data-sort="sale_date">
+                            Fecha de venta <span class="sort-icon text-gray-400 text-xs ml-1">▴▾</span>
+                        </th>
+                        <th>Acciones</th> 
+                    </tr>
+                </thead>
             <tbody id="tbody"></tbody>
         </table>
     </div>

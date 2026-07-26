@@ -106,12 +106,14 @@ function getAllSales() {
         SELECT 
             s.id_sale,
             s.id_order,
+            ro.brand_model,
             u.username AS cashier_name,
             s.payment_method,
             s.total_paid,
             s.sale_date
         FROM sales s
         INNER JOIN users u ON s.id_user = u.id_user
+        INNER JOIN repair_orders ro ON s.id_order = ro.id_order
     ");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
@@ -167,17 +169,30 @@ function checkShiftStatus($id_user) {
 function updateCashRegister($data) {
     global $pdo;
 
+    $declared_cash = $data['declared_cash'] !== '' ? $data['declared_cash'] : null;
+
     try {
-        $stmt = $pdo->prepare("
-            UPDATE cash_register
-            SET initial_cash = :initial_cash,
-                declared_cash = :declared_cash
-            WHERE id_cut = :id_cut
-        ");
+        if ($declared_cash !== null) {
+            $stmt = $pdo->prepare("
+                UPDATE cash_register
+                SET initial_cash = :initial_cash,
+                    declared_cash = :declared_cash,
+                    closing_time = IFNULL(closing_time, NOW())
+                WHERE id_cut = :id_cut
+            ");
+        } else {
+            $stmt = $pdo->prepare("
+                UPDATE cash_register
+                SET initial_cash = :initial_cash,
+                    declared_cash = NULL,
+                    closing_time = NULL
+                WHERE id_cut = :id_cut
+            ");
+        }
 
         $stmt->execute([
             'initial_cash' => $data['initial_cash'],
-            'declared_cash' => $data['declared_cash'],
+            'declared_cash' => $declared_cash,
             'id_cut' => $data['id_cut']
         ]);
 
