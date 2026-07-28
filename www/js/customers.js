@@ -1,5 +1,5 @@
 import { peticionCust } from './cust_api.js';
-import { alternarVistasCust, pintarTablaCust, ordenarDatosTabla } from './cust_ui.js';
+import { alternarVistasCust, pintarTablaCust, ordenarDatosTabla, pintarPaginacion } from './cust_ui.js';
 import { procesarGuardadoCust, procesarEdicionCust } from './cust_form.js';
 
 const vistaTabla = document.querySelector("#vista-tabla");
@@ -9,10 +9,14 @@ const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formCustomers");
+const paginacionContainer = document.querySelector("#paginacion-container");
 
 let datosActuales = []; 
 let ordenAscendente = true;
 let columnaActual = "";
+
+let paginaActual = 1;
+const registrosPorPagina = 50;
 
 document.addEventListener("DOMContentLoaded", () => {
     cargarTabla();
@@ -22,8 +26,17 @@ async function cargarTabla() {
     const json = await peticionCust({ action: "getAll" });
     if (json.status === "success") {
         datosActuales = json.data;
-        pintarTablaCust(tbody, datosActuales);
+        actualizarVistaTabla(1);
     }
+}
+
+function actualizarVistaTabla(pagina) {
+    paginaActual = pagina;
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    const fin = inicio + registrosPorPagina;
+    const datosPagina = datosActuales.slice(inicio, fin);
+    pintarTablaCust(tbody, datosPagina);
+    pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
 }
 
 if (btnNuevo) {
@@ -93,6 +106,7 @@ if (thead) {
         const th = evento.target.closest(".sortable");
         if (!th) return; 
         const columna = th.getAttribute("data-sort");
+        
         if (columna === columnaActual) {
             ordenAscendente = !ordenAscendente; 
         } else {
@@ -110,8 +124,7 @@ if (thead) {
         iconoActivo.textContent = ordenAscendente ? "▴" : "▾"; 
         iconoActivo.classList.remove("text-gray-400");
         iconoActivo.classList.add("text-blue-600");
-
         datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-        pintarTablaCust(tbody, datosActuales);
+        actualizarVistaTabla(1);
     });
 }
