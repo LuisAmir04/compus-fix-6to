@@ -9,6 +9,9 @@ let datosActuales = [];
 let ordenAscendente = true;
 let columnaActual = "";
 
+let paginaActual = 1;
+const registrosPorPagina = 50; 
+
 document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("tbody");
     const thead = document.querySelector("thead");
@@ -64,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             iconoActivo.classList.add("text-blue-600");
 
             datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-            pintarTablaCaja(datosActuales);
+            actualizarVistaTabla(1);
         });
     }
 
@@ -107,7 +110,7 @@ function loadCashRegisters() {
         .then(json => {
             if (json.status === "success") {
                 datosActuales = json.data; 
-                pintarTablaCaja(datosActuales);
+                actualizarVistaTabla(1);
             } else {
                 console.error(json.message || "No se pudo cargar la tabla");
             }
@@ -115,6 +118,22 @@ function loadCashRegisters() {
         .catch(error => {
             console.error("Error al cargar registros:", error);
         });
+}
+
+function actualizarVistaTabla(pagina) {
+    paginaActual = pagina;
+    
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    const fin = inicio + registrosPorPagina;
+    
+    const datosPagina = datosActuales.slice(inicio, fin);
+    
+    pintarTablaCaja(datosPagina);
+    
+    const paginacionContainer = document.getElementById("paginacion-container");
+    if (paginacionContainer) {
+        pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
+    }
 }
 
 function pintarTablaCaja(datos) {
@@ -147,6 +166,40 @@ function pintarTablaCaja(datos) {
     });
 }
 
+function pintarPaginacion(contenedor, totalRegistros, registrosPorPagina, paginaActual, callbackCambioPagina) {
+    contenedor.innerHTML = ""; 
+    const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);
+
+    if (totalPaginas <= 1) return; 
+
+    const info = document.createElement("span");
+    info.className = "text-sm text-gray-600 font-medium";
+    info.textContent = `Mostrando página ${paginaActual} de ${totalPaginas} (${totalRegistros} registros)`;
+    
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "flex gap-2";
+
+    const btnPrev = document.createElement("button");
+    btnPrev.className = `btn btn-sm ${paginaActual === 1 ? 'btn-disabled' : 'btn-outline'}`;
+    btnPrev.textContent = "« Anterior";
+    btnPrev.onclick = () => {
+        if (paginaActual > 1) callbackCambioPagina(paginaActual - 1);
+    };
+
+    const btnNext = document.createElement("button");
+    btnNext.className = `btn btn-sm ${paginaActual === totalPaginas ? 'btn-disabled' : 'btn-outline'}`;
+    btnNext.textContent = "Siguiente »";
+    btnNext.onclick = () => {
+        if (paginaActual < totalPaginas) callbackCambioPagina(paginaActual + 1);
+    };
+
+    btnContainer.appendChild(btnPrev);
+    btnContainer.appendChild(btnNext);
+    
+    contenedor.appendChild(info);
+    contenedor.appendChild(btnContainer);
+}
+
 function ordenarDatosTabla(datos, columna, ascendente) {
     return datos.sort((a, b) => {
         let valA = a[columna] !== null ? a[columna] : '';
@@ -164,6 +217,7 @@ function ordenarDatosTabla(datos, columna, ascendente) {
         return 0; 
     });
 }
+
 
 function editar(id_cut) {
     getCashRegisterById(id_cut)
