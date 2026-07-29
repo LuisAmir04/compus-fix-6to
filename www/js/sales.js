@@ -1,5 +1,5 @@
 import { peticionSal } from './sal_api.js';
-import { alternarVistasSal, pintarTablaSal, ordenarDatosTabla } from './sal_ui.js'; 
+import { alternarVistasSal, pintarTablaSal, ordenarDatosTabla, pintarPaginacion } from './sal_ui.js'; 
 import { cargarCatalogosSal, procesarGuardadoSal, procesarEdicionSal } from './sal_form.js';
 
 const vistaTabla = document.querySelector("#vista-tabla");
@@ -9,10 +9,13 @@ const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formNuevaVenta");
+const paginacionContainer = document.querySelector("#paginacion-container");
 
 let datosActuales = []; 
 let ordenAscendente = true;
 let columnaActual = "";
+let paginaActual = 1;
+const registrosPorPagina = 50;
 
 document.addEventListener("DOMContentLoaded", () => {
     if (tbody) cargarTabla();
@@ -23,8 +26,20 @@ async function cargarTabla() {
     const json = await peticionSal({ action: "getAll" });
     if (json.status === "success") {
         datosActuales = json.data;
-        pintarTablaSal(tbody, datosActuales);
+        actualizarVistaTabla(1);
     }
+}
+
+function actualizarVistaTabla(pagina) {
+    paginaActual = pagina;
+    
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    const fin = inicio + registrosPorPagina;
+    
+    const datosPagina = datosActuales.slice(inicio, fin);
+    
+    pintarTablaSal(tbody, datosPagina);
+    pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
 }
 
 if (btnNuevo) {
@@ -118,7 +133,8 @@ if (thead) {
         iconoActivo.textContent = ordenAscendente ? "▴" : "▾";
         iconoActivo.classList.remove("text-gray-400");
         iconoActivo.classList.add("text-blue-600");
+        
         datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-        pintarTablaSal(tbody, datosActuales);
+        actualizarVistaTabla(1);
     });
 }

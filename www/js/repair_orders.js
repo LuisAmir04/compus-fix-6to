@@ -1,5 +1,5 @@
 import { enviarPeticion } from './ro_api.js';
-import { alternarVistas, pintarTabla, ordenarDatosTabla } from './ro_ui.js'; 
+import { alternarVistas, pintarTabla, ordenarDatosTabla, pintarPaginacion } from './ro_ui.js'; 
 import { cargarCatalogos, procesarGuardado, cargarDatosOrden } from './ro_form.js'
 
 const vistaTabla = document.querySelector("#vista-tabla");
@@ -10,9 +10,14 @@ const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formOrden");
+const paginacionContainer = document.querySelector("#paginacion-container");
 
 let datosActuales = []; 
 let ordenAscendente = true;
+let columnaActual = "";
+
+let paginaActual = 1;
+const registrosPorPagina = 50;
 
 document.addEventListener("DOMContentLoaded", () => {
     if (tbody) cargarOrdenes();
@@ -20,11 +25,23 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function cargarOrdenes() {
-const json = await enviarPeticion({ action: "getAll" });
+    const json = await enviarPeticion({ action: "getAll" });
     if (json.status === "success") {
         datosActuales = json.data;
-        pintarTabla(tbody, datosActuales);
+        actualizarVistaTabla(1);
     }
+}
+
+function actualizarVistaTabla(pagina) {
+    paginaActual = pagina;
+    
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    const fin = inicio + registrosPorPagina;
+    
+    const datosPagina = datosActuales.slice(inicio, fin);
+    
+    pintarTabla(tbody, datosPagina);
+    pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
 }
 
 if (form) {
@@ -93,8 +110,6 @@ if (tbody) {
     });
 }
 
-let columnaActual = "";
-
 if (thead) {
     thead.addEventListener("click", (evento) => {
         const th = evento.target.closest(".sortable");
@@ -121,6 +136,6 @@ if (thead) {
         iconoActivo.classList.add("text-blue-600");
 
         datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-        pintarTabla(tbody, datosActuales);
+        actualizarVistaTabla(1);
     });
 }

@@ -1,5 +1,5 @@
 import { peticionUsr } from './usr_api.js';
-import { alternarVistasUsr, pintarTablaUsr, ordenarDatosTabla } from './usr_ui.js'; 
+import { alternarVistasUsr, pintarTablaUsr, ordenarDatosTabla, pintarPaginacion } from './usr_ui.js'; 
 import { cargarRolesUsr, procesarGuardadoUsr, procesarEdicionUsr } from './usr_form.js';
 
 const vistaTabla = document.querySelector("#vista-tabla");
@@ -9,10 +9,13 @@ const btnVolver = document.querySelector("#btnVolver");
 const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formUsers");
+const paginacionContainer = document.querySelector("#paginacion-container");
 
 let datosActuales = []; 
 let ordenAscendente = true;
 let columnaActual = "";
+let paginaActual = 1;
+const registrosPorPagina = 50; 
 
 document.addEventListener("DOMContentLoaded", () => {
     if (tbody) cargarTabla();
@@ -23,8 +26,19 @@ async function cargarTabla() {
     const json = await peticionUsr({ action: "getAll" });
     if (json.status === "success") {
         datosActuales = json.data;
-        pintarTablaUsr(tbody, datosActuales);
+        actualizarVistaTabla(1);
     }
+}
+
+function actualizarVistaTabla(pagina) {
+    paginaActual = pagina;
+    
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    const fin = inicio + registrosPorPagina;
+    const datosPagina = datosActuales.slice(inicio, fin);
+    
+    pintarTablaUsr(tbody, datosPagina);
+    pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
 }
 
 if (btnNuevo) {
@@ -117,6 +131,6 @@ if (thead) {
         iconoActivo.classList.add("text-blue-600");
 
         datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-        pintarTablaUsr(tbody, datosActuales);
+        actualizarVistaTabla(1);
     });
 }
