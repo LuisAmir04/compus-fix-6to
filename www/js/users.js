@@ -1,5 +1,5 @@
 import { peticionUsr } from './usr_api.js';
-import { alternarVistasUsr, pintarTablaUsr, ordenarDatosTabla, pintarPaginacion } from './usr_ui.js'; 
+import { alternarVistasUsr, pintarTablaUsr, pintarPaginacion } from './usr_ui.js'; 
 import { cargarRolesUsr, procesarGuardadoUsr, procesarEdicionUsr } from './usr_form.js';
 
 const vistaTabla = document.querySelector("#vista-tabla");
@@ -11,34 +11,39 @@ const thead = document.querySelector("thead");
 const form = document.querySelector("#formUsers");
 const paginacionContainer = document.querySelector("#paginacion-container");
 
-let datosActuales = []; 
-let ordenAscendente = true;
-let columnaActual = "";
+// Variables globales
+let columnaActual = "id_user";
+let direccion = "ASC";
 let paginaActual = 1;
-const registrosPorPagina = 50; 
+const limite = 50; 
 
 document.addEventListener("DOMContentLoaded", () => {
     if (tbody) cargarTabla();
     if (form) cargarRolesUsr(form);
 });
 
+// Función que manda TODO a PHP
 async function cargarTabla() {
-    const json = await peticionUsr({ action: "getAll" });
+    let offset = (paginaActual - 1) * limite;
+
+    const json = await peticionUsr({ 
+        action: "getAll",
+        ordenarPor: columnaActual,
+        direccion: direccion,
+        limite: limite,
+        offset: offset
+    });
+
     if (json.status === "success") {
-        datosActuales = json.data;
-        actualizarVistaTabla(1);
+        pintarTablaUsr(tbody, json.data);
+        pintarPaginacion(paginacionContainer, json.total, limite, paginaActual, cambiarPagina);
     }
 }
 
-function actualizarVistaTabla(pagina) {
-    paginaActual = pagina;
-    
-    const inicio = (paginaActual - 1) * registrosPorPagina;
-    const fin = inicio + registrosPorPagina;
-    const datosPagina = datosActuales.slice(inicio, fin);
-    
-    pintarTablaUsr(tbody, datosPagina);
-    pintarPaginacion(paginacionContainer, datosActuales.length, registrosPorPagina, paginaActual, actualizarVistaTabla);
+// Función que ejecuta el paginador
+function cambiarPagina(nuevaPagina) {
+    paginaActual = nuevaPagina;
+    cargarTabla();
 }
 
 if (btnNuevo) {
@@ -65,7 +70,7 @@ if (form) {
         Swal.fire(respuesta.status === "success" ? "Éxito" : "Error", respuesta.message || "Ocurrió un error", respuesta.status);
         
         if (respuesta.status === "success") {
-            cargarTabla();
+            cargarTabla(); 
             alternarVistasUsr(vistaTabla, vistaFormulario);
         }
     });
@@ -112,13 +117,15 @@ if (thead) {
         if (!th) return; 
         
         const columna = th.getAttribute("data-sort");
+        
         if (columna === columnaActual) {
-            ordenAscendente = !ordenAscendente; 
+            direccion = (direccion === "ASC") ? "DESC" : "ASC";
         } else {
-            ordenAscendente = true; 
+            direccion = "ASC"; 
             columnaActual = columna; 
         }
 
+        // Actualizar visualmente los íconos
         document.querySelectorAll(".sortable .sort-icon").forEach(icon => {
             icon.textContent = "▴▾";
             icon.classList.remove("text-blue-600");
@@ -126,11 +133,11 @@ if (thead) {
         });
 
         const iconoActivo = th.querySelector(".sort-icon");
-        iconoActivo.textContent = ordenAscendente ? "▴" : "▾";
+        iconoActivo.textContent = (direccion === "ASC") ? "▴" : "▾";
         iconoActivo.classList.remove("text-gray-400");
         iconoActivo.classList.add("text-blue-600");
 
-        datosActuales = ordenarDatosTabla(datosActuales, columna, ordenAscendente);
-        actualizarVistaTabla(1);
+        paginaActual = 1;
+        cargarTabla(); // Hacemos la consulta SQL nuevamente
     });
 }

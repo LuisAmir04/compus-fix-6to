@@ -6,10 +6,18 @@ $action = $post['action'] ?? '';
 
 switch ($action) {
     case "getAll":
-        $data = getAllCustomers();
+        $ordenarPor = $post['ordenarPor'];
+        $direccion = $post['direccion'];
+        $limite = $post['limite'];
+        $offset = $post['offset'];
+
+        $data = getAllCustomers($ordenarPor, $direccion, $limite, $offset);
+        $total = getCountCustomers();
+
         echo json_encode([
             "status" => "success",
-            "data" => $data
+            "data" => $data,
+            "total" => $total
         ]);
         break;
 

@@ -42,8 +42,19 @@ switch ($action) {
         exit;
 
     case 'getAll':
-        $users = getAllUsers(); 
-        echo json_encode(["status" => "success", "data" => $users]);
+        $ordenarPor = $data['ordenarPor'];
+        $direccion = $data['direccion'];
+        $limite = $data['limite'];
+        $offset = $data['offset'];
+
+        $users = getAllUsers($ordenarPor, $direccion, $limite, $offset); 
+        $total = getCountUsers();
+
+        echo json_encode([
+            "status" => "success", 
+            "data" => $users,
+            "total" => $total
+        ]);
         exit;
 
     case 'getById':

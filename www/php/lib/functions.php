@@ -26,12 +26,12 @@ function getAllStatuses() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllCustomers() {
+function getAllCustomers($ordenarPor, $direccion, $limite, $offset) {
     global $pdo;
-    $stmt = $pdo->query("SELECT id_customer, name, phone, email FROM customers");
+    $sql = "SELECT id_customer, name, phone, email FROM customers ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . $limite . " OFFSET " . $offset;
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
 function getCustomerById($id_customer) {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM customers WHERE id_customer = :id_customer");
@@ -67,17 +67,31 @@ function deleteCustomer($id_customer) {
 }
 
 
-function getAllUsers() {
+function getAllUsers($ordenarPor, $direccion, $limite, $offset) {
     global $pdo;
-    $stmt = $pdo->query("SELECT u.id_user, u.username, r.name AS role_name 
-                         FROM users u 
-                         INNER JOIN roles r ON u.id_role = r.id_role");
+    $sql = "
+        SELECT 
+            u.id_user, 
+            u.username, 
+            r.name AS role_name 
+        FROM users u 
+        INNER JOIN roles r ON u.id_role = r.id_role
+        ORDER BY " . $ordenarPor . " " . $direccion . " 
+        LIMIT " . $limite . " OFFSET " . $offset;
+        
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllRepairOrders() {
+function getUsersForCatalog() {
     global $pdo;
-    $stmt = $pdo->query("
+    $stmt = $pdo->query("SELECT id_user, username, id_role FROM users ORDER BY username ASC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getAllRepairOrders($ordenarPor, $direccion, $limite, $offset) {
+    global $pdo;
+    $sql = "
         SELECT 
             o.id_order, 
             c.name AS customer_name,
@@ -96,13 +110,16 @@ function getAllRepairOrders() {
         INNER JOIN service_types st ON o.id_service_type = st.id_service_type
         INNER JOIN statuses s ON o.id_status = s.id_status
         INNER JOIN users u ON o.id_user = u.id_user
-    ");
+        ORDER BY " . $ordenarPor . " " . $direccion . " 
+        LIMIT " . $limite . " OFFSET " . $offset;
+        
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllSales() {
+function getAllSales($ordenarPor, $direccion, $limite, $offset) {
     global $pdo;
-    $stmt = $pdo->query("
+    $sql = "
         SELECT 
             s.id_sale,
             s.id_order,
@@ -114,13 +131,15 @@ function getAllSales() {
         FROM sales s
         INNER JOIN users u ON s.id_user = u.id_user
         INNER JOIN repair_orders ro ON s.id_order = ro.id_order
-    ");
+        ORDER BY " . $ordenarPor . " " . $direccion . " 
+        LIMIT " . $limite . " OFFSET " . $offset;
+        
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
-function getAllCashRegister() {
+function getAllCashRegister($ordenarPor, $direccion, $limite, $offset) {
     global $pdo;
-    $stmt = $pdo->query("
+    $sql = "
         SELECT 
             cr.id_cut,
             u.username AS cashier_name,
@@ -130,7 +149,10 @@ function getAllCashRegister() {
             cr.declared_cash
         FROM cash_register cr
         INNER JOIN users u ON cr.id_user = u.id_user
-    ");
+        ORDER BY " . $ordenarPor . " " . $direccion . " 
+        LIMIT " . $limite . " OFFSET " . $offset;
+        
+    $stmt = $pdo->query($sql);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -423,12 +445,19 @@ function insertRepairOrder($post) {
 
 function getCatalogsForOrder() {
     return [
-        "customers" => getAllCustomers(),
+        "customers" => getCustomersForCatalog(),
         "device_types" => getAllDeviceTypes(),
         "service_types" => getAllServiceTypes(),
         "statuses" => getAllStatuses(),
-        "users" => getAllUsers()
+        "users" => getUsersForCatalog()
     ];
+}
+
+//Solo para el menú desplegable, trae todos sin paginar
+function getCustomersForCatalog() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT id_customer, name FROM customers ORDER BY name ASC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 function deleteRepairOrder($id_order) {
@@ -438,10 +467,25 @@ function deleteRepairOrder($id_order) {
     return $stmt->rowCount() > 0; // Returns true if a row was deleted
 }
 
+function getRepairOrdersForCatalog() {
+    global $pdo;
+    $sql = "
+        SELECT 
+            o.id_order, 
+            o.brand_model, 
+            c.name AS customer_name
+        FROM repair_orders o
+        INNER JOIN customers c ON o.id_customer = c.id_customer
+        ORDER BY o.id_order DESC
+    ";
+    
+    $stmt = $pdo->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 function getCatalogsForSales() {
     return [
-        "users" => getAllUsers(),
-        "orders" => getAllRepairOrders()
+        "users" => getUsersForCatalog(),
+        "orders" => getRepairOrdersForCatalog()
     ];
 }
 
@@ -618,6 +662,41 @@ function getRoleById($id) {
     $stmt = $pdo->prepare("SELECT * FROM roles WHERE id_role = :id");
     $stmt->execute(['id' => $id]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function getCountCustomers() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function getCountRepairOrders() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM repair_orders");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function getCountCashRegister() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM cash_register");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function getCountSales() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM sales");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function getCountUsers() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) as total FROM users");
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
 }
 
 ?>

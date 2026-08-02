@@ -27,24 +27,6 @@ export function pintarTabla(tbody, datos) {
     });
 }
 
-export function ordenarDatosTabla(datos, columna, ascendente) {
-    return datos.sort((a, b) => {
-        let valA = a[columna] !== null ? a[columna] : '';
-        let valB = b[columna] !== null ? b[columna] : '';
-
-        if (!isNaN(valA) && !isNaN(valB) && valA !== '' && valB !== '') {
-            return ascendente ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
-        }
-
-        valA = valA.toString().toLowerCase();
-        valB = valB.toString().toLowerCase();
-
-        if (valA < valB) return ascendente ? -1 : 1;
-        if (valA > valB) return ascendente ? 1 : -1;
-        return 0; 
-    });
-}
-
 export function pintarPaginacion(contenedor, totalRegistros, registrosPorPagina, paginaActual, callbackCambioPagina) {
     contenedor.innerHTML = "";
     const totalPaginas = Math.ceil(totalRegistros / registrosPorPagina);

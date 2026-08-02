@@ -11,7 +11,7 @@ case "delete":
     break;
     
     case "getUsers":
-    $users = getAllUsers();
+    $users = getUsersForCatalog();
     echo json_encode(["status" => "success", "data" => $users]);
     break;
     
@@ -23,10 +23,21 @@ case "update":
     echo json_encode(updateCashRegister($post));
     break;
 
-    case "getAll":
-        $data = getAllCashRegister(); 
+case "getAll":
+        $ordenarPor = $post['ordenarPor'];
+        $direccion = $post['direccion'];
+        $limite = $post['limite'];
+        $offset = $post['offset'];
+
+        $data = getAllCashRegister($ordenarPor, $direccion, $limite, $offset);
+        $total = getCountCashRegister();
+
         if ($data) {
-            echo json_encode(["status" => "success", "data" => $data]);
+            echo json_encode([
+                "status" => "success", 
+                "data" => $data,
+                "total" => $total
+            ]);
         } else {
             echo json_encode(["status" => "error", "message" => "No hay datos para mostrar"]);
         }
