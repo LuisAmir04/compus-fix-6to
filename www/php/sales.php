@@ -5,14 +5,16 @@ $post = json_decode(file_get_contents("php://input"), true);
 $action = $post['action'] ?? '';
 
 switch ($action) {
-    case "getAll":
-        $ordenarPor = $post['ordenarPor'];
-        $direccion = $post['direccion'];
-        $limite = $post['limite'];
-        $offset = $post['offset'];
-
-        $data = getAllSales($ordenarPor, $direccion, $limite, $offset);
-        $total = getCountSales();
+case "getAll":
+        $ordenarPor = $post['ordenarPor'] ?? 'id_sale';
+        $direccion = $post['direccion'] ?? 'ASC';
+        $limite = $post['limite'] ?? 50;
+        $offset = $post['offset'] ?? 0;
+        // Recibimos el texto del buscador
+        $busqueda = $post['busqueda'] ?? '';
+        // Pasamos la variable a ambas funciones
+        $data = getAllSales($ordenarPor, $direccion, $limite, $offset, $busqueda);
+        $total = getCountSales($busqueda);
 
         echo json_encode([
             "status" => "success", 

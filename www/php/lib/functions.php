@@ -26,12 +26,36 @@ function getAllStatuses() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllCustomers($ordenarPor, $direccion, $limite, $offset) {
+function getAllCustomers($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
     global $pdo;
-    $sql = "SELECT id_customer, name, phone, email FROM customers ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . $limite . " OFFSET " . $offset;
-    $stmt = $pdo->query($sql);
+    
+    // Validar por seguridad que ordenarPor no esté vacío y dirección sea válida
+    $ordenarPor = $ordenarPor ?: 'id_customer';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+    
+    // Base de la consulta
+    $sql = "SELECT id_customer, name, phone, email FROM customers ";
+    
+    // Si el usuario escribió algo en el buscador, agregamos el WHERE
+    if ($busqueda !== '') {
+        $sql .= " WHERE name LIKE :busqueda OR email LIKE :busqueda OR phone LIKE :busqueda ";
+    }
+    
+    // Agregamos el ordenamiento y límite
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+    
+    $stmt = $pdo->prepare($sql);
+    
+    // Si hay búsqueda, pasamos el parámetro de forma segura para evitar Inyección SQL
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+    
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
 function getCustomerById($id_customer) {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM customers WHERE id_customer = :id_customer");
@@ -67,8 +91,12 @@ function deleteCustomer($id_customer) {
 }
 
 
-function getAllUsers($ordenarPor, $direccion, $limite, $offset) {
+function getAllUsers($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
     global $pdo;
+    
+    $ordenarPor = $ordenarPor ?: 'id_user';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+    
     $sql = "
         SELECT 
             u.id_user, 
@@ -76,10 +104,25 @@ function getAllUsers($ordenarPor, $direccion, $limite, $offset) {
             r.name AS role_name 
         FROM users u 
         INNER JOIN roles r ON u.id_role = r.id_role
-        ORDER BY " . $ordenarPor . " " . $direccion . " 
-        LIMIT " . $limite . " OFFSET " . $offset;
-        
-    $stmt = $pdo->query($sql);
+    ";
+    
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE u.username LIKE :busqueda 
+               OR r.name LIKE :busqueda
+        ";
+    }
+    
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+    
+    $stmt = $pdo->prepare($sql);
+    
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+    
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -89,8 +132,14 @@ function getUsersForCatalog() {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllRepairOrders($ordenarPor, $direccion, $limite, $offset) {
+function getAllRepairOrders($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
     global $pdo;
+    
+    // Validaciones básicas de seguridad
+    $ordenarPor = $ordenarPor ?: 'id_order';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+    
+    // Base de la consulta con todos los JOINs
     $sql = "
         SELECT 
             o.id_order, 
@@ -110,15 +159,39 @@ function getAllRepairOrders($ordenarPor, $direccion, $limite, $offset) {
         INNER JOIN service_types st ON o.id_service_type = st.id_service_type
         INNER JOIN statuses s ON o.id_status = s.id_status
         INNER JOIN users u ON o.id_user = u.id_user
-        ORDER BY " . $ordenarPor . " " . $direccion . " 
-        LIMIT " . $limite . " OFFSET " . $offset;
-        
-    $stmt = $pdo->query($sql);
+    ";
+    
+    // Agregamos los filtros de búsqueda
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE c.name LIKE :busqueda 
+               OR u.username LIKE :busqueda 
+               OR o.brand_model LIKE :busqueda 
+               OR s.name LIKE :busqueda
+               OR o.created_at LIKE :busqueda
+        ";
+    }
+    
+    // Agregamos el ordenamiento y el paginador
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+    
+    $stmt = $pdo->prepare($sql);
+    
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+    
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getAllSales($ordenarPor, $direccion, $limite, $offset) {
+function getAllSales($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
     global $pdo;
+    
+    $ordenarPor = $ordenarPor ?: 'id_sale';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+    
     $sql = "
         SELECT 
             s.id_sale,
@@ -131,14 +204,36 @@ function getAllSales($ordenarPor, $direccion, $limite, $offset) {
         FROM sales s
         INNER JOIN users u ON s.id_user = u.id_user
         INNER JOIN repair_orders ro ON s.id_order = ro.id_order
-        ORDER BY " . $ordenarPor . " " . $direccion . " 
-        LIMIT " . $limite . " OFFSET " . $offset;
-        
-    $stmt = $pdo->query($sql);
+    ";
+    
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE s.id_order LIKE :busqueda
+               OR ro.brand_model LIKE :busqueda 
+               OR u.username LIKE :busqueda 
+               OR s.payment_method LIKE :busqueda
+               OR s.sale_date LIKE :busqueda
+        ";
+    }
+    
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+    
+    $stmt = $pdo->prepare($sql);
+    
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+    
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-function getAllCashRegister($ordenarPor, $direccion, $limite, $offset) {
+function getAllCashRegister($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
     global $pdo;
+    
+    $ordenarPor = $ordenarPor ?: 'id_cut';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+    
     $sql = "
         SELECT 
             cr.id_cut,
@@ -149,10 +244,26 @@ function getAllCashRegister($ordenarPor, $direccion, $limite, $offset) {
             cr.declared_cash
         FROM cash_register cr
         INNER JOIN users u ON cr.id_user = u.id_user
-        ORDER BY " . $ordenarPor . " " . $direccion . " 
-        LIMIT " . $limite . " OFFSET " . $offset;
-        
-    $stmt = $pdo->query($sql);
+    ";
+    
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE u.username LIKE :busqueda 
+               OR cr.opening_time LIKE :busqueda
+               OR cr.closing_time LIKE :busqueda
+        ";
+    }
+    
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+    
+    $stmt = $pdo->prepare($sql);
+    
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+    
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -664,37 +775,117 @@ function getRoleById($id) {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function getCountCustomers() {
+function getCountCustomers($busqueda = '') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers");
+    // Si hay un término de búsqueda, ajustamos la consulta para filtrar por nombre, correo o teléfono
+    if ($busqueda !== '') {
+        $sql = "SELECT COUNT(*) as total FROM customers WHERE name LIKE :busqueda OR email LIKE :busqueda OR phone LIKE :busqueda";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM customers";
+        $stmt = $pdo->query($sql);
+    }
+    
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }
 
-function getCountRepairOrders() {
+function getCountRepairOrders($busqueda = '') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM repair_orders");
+    
+    if ($busqueda !== '') {
+        // Debemos hacer los mismos JOINs aquí para poder contar usando los nombres (cliente, tecnico, status)
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM repair_orders o
+            INNER JOIN customers c ON o.id_customer = c.id_customer
+            INNER JOIN users u ON o.id_user = u.id_user
+            INNER JOIN statuses s ON o.id_status = s.id_status
+            WHERE c.name LIKE :busqueda 
+               OR u.username LIKE :busqueda 
+               OR o.brand_model LIKE :busqueda 
+               OR s.name LIKE :busqueda
+               OR o.created_at LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM repair_orders";
+        $stmt = $pdo->query($sql);
+    }
+    
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }
 
-function getCountCashRegister() {
+function getCountCashRegister($busqueda = '') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM cash_register");
+    
+    if ($busqueda !== '') {
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM cash_register cr
+            INNER JOIN users u ON cr.id_user = u.id_user
+            WHERE u.username LIKE :busqueda 
+               OR cr.opening_time LIKE :busqueda
+               OR cr.closing_time LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM cash_register";
+        $stmt = $pdo->query($sql);
+    }
+    
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }
 
-function getCountSales() {
+function getCountSales($busqueda = '') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM sales");
+    
+    if ($busqueda !== '') {
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM sales s
+            INNER JOIN users u ON s.id_user = u.id_user
+            INNER JOIN repair_orders ro ON s.id_order = ro.id_order
+            WHERE s.id_order LIKE :busqueda
+               OR ro.brand_model LIKE :busqueda 
+               OR u.username LIKE :busqueda 
+               OR s.payment_method LIKE :busqueda
+               OR s.sale_date LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM sales";
+        $stmt = $pdo->query($sql);
+    }
+    
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }
 
-function getCountUsers() {
+function getCountUsers($busqueda = '') {
     global $pdo;
-    $stmt = $pdo->query("SELECT COUNT(*) as total FROM users");
+    
+    if ($busqueda !== '') {
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM users u
+            INNER JOIN roles r ON u.id_role = r.id_role
+            WHERE u.username LIKE :busqueda 
+               OR r.name LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM users";
+        $stmt = $pdo->query($sql);
+    }
+    
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }

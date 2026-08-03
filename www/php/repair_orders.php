@@ -6,13 +6,15 @@ $action = $post['action'] ?? '';
 
 switch ($action) {
     case "getAll":
-        $ordenarPor = $post['ordenarPor'];
-        $direccion = $post['direccion'];
-        $limite = $post['limite'];
-        $offset = $post['offset'];
+        $ordenarPor = $post['ordenarPor'] ?? 'id_order';
+        $direccion = $post['direccion'] ?? 'ASC';
+        $limite = $post['limite'] ?? 50;
+        $offset = $post['offset'] ?? 0;
+        // Recibimos el texto del buscador
+        $busqueda = $post['busqueda'] ?? '';
 
-        $data = getAllRepairOrders($ordenarPor, $direccion, $limite, $offset);
-        $total = getCountRepairOrders();
+        $data = getAllRepairOrders($ordenarPor, $direccion, $limite, $offset, $busqueda);
+        $total = getCountRepairOrders($busqueda);
 
         echo json_encode([
             "status" => "success", 

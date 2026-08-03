@@ -10,8 +10,10 @@ const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formNuevaVenta");
 const paginacionContainer = document.querySelector("#paginacion-container");
-
+const inputBuscar = document.querySelector("#inputBuscar");
+const btnBuscar = document.querySelector("#btnBuscar");
 // Variables globales
+let textoBusqueda = "";
 let columnaActual = "id_sale";
 let direccion = "ASC";
 let paginaActual = 1;
@@ -31,7 +33,8 @@ async function cargarTabla() {
         ordenarPor: columnaActual,
         direccion: direccion,
         limite: limite,
-        offset: offset
+        offset: offset,
+        busqueda: textoBusqueda
     });
 
     if (json.status === "success") {
@@ -142,5 +145,20 @@ if (thead) {
         
         paginaActual = 1; // Resetea la paginación a 1
         cargarTabla();
+    });
+}
+
+// BUSCADOR CON SQL
+if (btnBuscar) {
+    btnBuscar.addEventListener("click", () => {
+        textoBusqueda = inputBuscar.value.trim();
+        paginaActual = 1; 
+        cargarTabla();
+    });
+
+    inputBuscar.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+            btnBuscar.click();
+        }
     });
 }

@@ -17,7 +17,11 @@ const btnGuardar = document.getElementById("btnGuardar");
 const btnActualizar = document.getElementById("btnActualizar");
 const btnCancelar = document.getElementById("btnCancelar");
 
+const inputBuscar = document.querySelector("#inputBuscar");
+const btnBuscar = document.querySelector("#btnBuscar");
+
 // Variables globales
+let textoBusqueda = "";
 let columnaActual = "id_cut";
 let direccion = "ASC";
 let paginaActual = 1;
@@ -37,7 +41,8 @@ async function cargarCortes() {
         ordenarPor: columnaActual,
         direccion: direccion,
         limite: limite,
-        offset: offset
+        offset: offset,
+        busqueda: textoBusqueda
     });
 
     if (json.status === "success") {
@@ -47,7 +52,8 @@ async function cargarCortes() {
             cargarCortes();
         });
     } else {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">${json.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">${json.message || "No hay resultados"}</td></tr>`;
+        paginacionContainer.innerHTML = ""; // Limpiamos paginador si no hay resultados
     }
 }
 // 2. ORDENAMIENTO POR SQL
@@ -193,6 +199,20 @@ if (btnActualizar) {
             cargarCortes();
         } else {
             Swal.fire("Error", json.message, "error");
+        }
+    });
+}
+
+if (btnBuscar) {
+    btnBuscar.addEventListener("click", () => {
+        textoBusqueda = inputBuscar.value.trim();
+        paginaActual = 1; 
+        cargarCortes();
+    });
+
+    inputBuscar.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+            btnBuscar.click();
         }
     });
 }

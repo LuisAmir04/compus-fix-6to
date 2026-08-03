@@ -24,18 +24,20 @@ case "update":
     break;
 
 case "getAll":
-        $ordenarPor = $post['ordenarPor'];
-        $direccion = $post['direccion'];
-        $limite = $post['limite'];
-        $offset = $post['offset'];
+        $ordenarPor = $post['ordenarPor'] ?? 'id_cut';
+        $direccion = $post['direccion'] ?? 'ASC';
+        $limite = $post['limite'] ?? 50;
+        $offset = $post['offset'] ?? 0;
+        // Recibimos el texto del buscador
+        $busqueda = $post['busqueda'] ?? '';
 
-        $data = getAllCashRegister($ordenarPor, $direccion, $limite, $offset);
-        $total = getCountCashRegister();
+        $data = getAllCashRegister($ordenarPor, $direccion, $limite, $offset, $busqueda);
+        $total = getCountCashRegister($busqueda);
 
-        if ($data) {
+        if ($data || $total == 0) { 
             echo json_encode([
                 "status" => "success", 
-                "data" => $data,
+                "data" => $data ?: [],
                 "total" => $total
             ]);
         } else {

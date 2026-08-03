@@ -11,8 +11,16 @@
     <div id="navbar-container"></div>
     
     <div id="vista-tabla" class="overflow-x-auto">
-        <div class="mb-4">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
             <button id="btnNuevo" class="btn btn-primary">Registrar Venta</button>
+
+            <!--Barra de búsqueda -->
+            <div class="w-full md:w-1/2 flex">
+                <input type="text" id="inputBuscar" placeholder="Buscar por orden, dispositivo, cajero o método..." class="w-full border border-gray-300 rounded-l-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <button id="btnBuscar" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition">
+                    Buscar
+                </button>
+            </div>
         </div>
         
         <table class="table table-zebra w-full">

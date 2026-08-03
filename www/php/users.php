@@ -41,20 +41,26 @@ switch ($action) {
         echo json_encode(["status" => "success", "data" => $roles]);
         exit;
 
-    case 'getAll':
-        $ordenarPor = $data['ordenarPor'];
-        $direccion = $data['direccion'];
-        $limite = $data['limite'];
-        $offset = $data['offset'];
+case 'getAll':
+        $ordenarPor = $data['ordenarPor'] ?? 'id_user';
+        $direccion = $data['direccion'] ?? 'ASC';
+        $limite = $data['limite'] ?? 50;
+        $offset = $data['offset'] ?? 0;
 
-        $users = getAllUsers($ordenarPor, $direccion, $limite, $offset); 
-        $total = getCountUsers();
+        $busqueda = $data['busqueda'] ?? '';
 
-        echo json_encode([
-            "status" => "success", 
-            "data" => $users,
-            "total" => $total
-        ]);
+        $users = getAllUsers($ordenarPor, $direccion, $limite, $offset, $busqueda); 
+        $total = getCountUsers($busqueda);
+
+        if ($users || $total == 0) {
+            echo json_encode([
+                "status" => "success", 
+                "data" => $users ?: [],
+                "total" => $total
+            ]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error al obtener usuarios"]);
+        }
         exit;
 
     case 'getById':

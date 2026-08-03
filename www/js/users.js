@@ -10,8 +10,10 @@ const tbody = document.querySelector("#tbody");
 const thead = document.querySelector("thead");
 const form = document.querySelector("#formUsers");
 const paginacionContainer = document.querySelector("#paginacion-container");
-
+const inputBuscar = document.querySelector("#inputBuscar");
+const btnBuscar = document.querySelector("#btnBuscar");
 // Variables globales
+let textoBusqueda = "";
 let columnaActual = "id_user";
 let direccion = "ASC";
 let paginaActual = 1;
@@ -31,15 +33,20 @@ async function cargarTabla() {
         ordenarPor: columnaActual,
         direccion: direccion,
         limite: limite,
-        offset: offset
+        offset: offset,
+        busqueda: textoBusqueda 
     });
 
     if (json.status === "success") {
         pintarTablaUsr(tbody, json.data);
         pintarPaginacion(paginacionContainer, json.total, limite, paginaActual, cambiarPagina);
+        
+        // Mensaje si la busqueda no arroja resultados
+        if(json.data.length === 0) {
+             tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">No se encontraron usuarios</td></tr>`;
+        }
     }
 }
-
 // Función que ejecuta el paginador
 function cambiarPagina(nuevaPagina) {
     paginaActual = nuevaPagina;
@@ -139,5 +146,19 @@ if (thead) {
 
         paginaActual = 1;
         cargarTabla(); // Hacemos la consulta SQL nuevamente
+    });
+}
+// BUSCADOR CON SQL
+if (btnBuscar) {
+    btnBuscar.addEventListener("click", () => {
+        textoBusqueda = inputBuscar.value.trim();
+        paginaActual = 1; 
+        cargarTabla();
+    });
+
+    inputBuscar.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+            btnBuscar.click();
+        }
     });
 }
