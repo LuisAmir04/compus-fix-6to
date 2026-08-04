@@ -40,7 +40,10 @@ async function cargarTabla() {
     if (json.status === "success") {
         pintarTablaCust(tbody, json.data);
         pintarPaginacion(paginacionContainer, json.total, limite, paginaActual, cambiarPagina);
-    }
+    } else {
+    console.error("Error al cargar órdenes:", json.message);
+    alert(json.message);
+}
 }
 
 // Función que ejecuta el paginador

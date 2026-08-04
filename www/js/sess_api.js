@@ -1,6 +1,6 @@
-const URL = "../php/cash_register.php";
+const URL = "../php/sessions.php";
 
-export async function peticionCaja(datos) {
+export async function peticionSess(datos) {
     try {
         const user = JSON.parse(localStorage.getItem("user_data"));
         datos.token = user ? user.token : "";

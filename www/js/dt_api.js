@@ -2,6 +2,9 @@ const URL = "../php/device_types.php";
 
 export async function peticionDT(datos) {
     try {
+        const user = JSON.parse(localStorage.getItem("user_data"));
+        datos.token = user ? user.token : "";
+        
         const respuesta = await fetch(URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

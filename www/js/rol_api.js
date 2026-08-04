@@ -2,6 +2,9 @@ const URL = "../php/roles.php";
 
 export async function peticionRol(datos) {
     try {
+        const user = JSON.parse(localStorage.getItem("user_data"));
+        datos.token = user ? user.token : "";
+        
         const respuesta = await fetch(URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
