@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once 'db.php';
 
 function getAllRoles() {
@@ -886,6 +885,94 @@ function getCountUsers($busqueda = '') {
         $stmt = $pdo->query($sql);
     }
     
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function protegerModulo($post, $rolesPermitidos) {
+    global $pdo;
+
+    $token = $post['token'] ?? '';
+
+    if (!$token) {
+        echo json_encode(["status" => "error", "message" => "No has iniciado sesión"]);
+        exit;
+    }
+
+    // Verifica el token contra la BD con una consulta
+    $stmt = $pdo->prepare("
+        SELECT u.id_user, u.id_role 
+        FROM sessions s
+        INNER JOIN users u ON s.id_user = u.id_user
+        WHERE s.token = :token AND s.expires_at > NOW()
+    ");
+    $stmt->execute(["token" => $token]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$usuario) {
+        echo json_encode(["status" => "error", "message" => "Sesión inválida o expirada"]);
+        exit;
+    }
+
+    if (!in_array($usuario['id_role'], $rolesPermitidos)) {
+        echo json_encode(["status" => "error", "message" => "No tienes permiso para este módulo"]);
+        exit;
+    }
+
+    return $usuario;
+}
+
+function getAllSessions($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
+    global $pdo;
+
+    $ordenarPor = $ordenarPor ?: 'id_session';
+    $direccion = ($direccion === 'DESC') ? 'DESC' : 'ASC';
+
+    $sql = "
+        SELECT 
+            s.id_session,
+            u.username,
+            s.created_at,
+            s.expires_at,
+            CASE WHEN s.expires_at > NOW() THEN 'Activa' ELSE 'Cerrada' END AS estado
+        FROM sessions s
+        INNER JOIN users u ON s.id_user = u.id_user
+    ";
+
+    if ($busqueda !== '') {
+        $sql .= " WHERE u.username LIKE :busqueda ";
+    }
+
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+
+    $stmt = $pdo->prepare($sql);
+
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getCountSessions($busqueda = '') {
+    global $pdo;
+
+    if ($busqueda !== '') {
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM sessions s
+            INNER JOIN users u ON s.id_user = u.id_user
+            WHERE u.username LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $sql = "SELECT COUNT(*) as total FROM sessions";
+        $stmt = $pdo->query($sql);
+    }
+
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result['total'];
 }

@@ -4,6 +4,8 @@ require_once 'lib/functions.php';
 $post = json_decode(file_get_contents("php://input"), true);
 $action = $post['action'] ?? '';
 
+protegerModulo($post, [1]);
+
 switch ($action) {
     case "getAll":
         $data = getAllRoles();

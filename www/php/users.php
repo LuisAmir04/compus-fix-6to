@@ -4,38 +4,62 @@ require_once 'lib/functions.php';
 $data = json_decode(file_get_contents("php://input"), true);
 $action = $data['action'] ?? '';
 
+if ($action !== 'login' && $action !== 'logout') {
+    protegerModulo($data, [1]);
+}
+
 switch ($action) {
 
     case 'login':
-        $user = $data['username'] ?? '';
-        $pass = $data['password'] ?? '';
+    $user = $data['username'] ?? '';
+    $pass = $data['password'] ?? '';
 
-        $stmt = $pdo->prepare("SELECT id_user, username, password, id_role FROM users WHERE username = :username");
-        $stmt->execute(['username' => $user]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare("
+        SELECT u.id_user, u.username, u.password, u.id_role, r.name AS role_name 
+        FROM users u 
+        INNER JOIN roles r ON u.id_role = r.id_role 
+        WHERE u.username = :username
+    ");
+    $stmt->execute(['username' => $user]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($result && password_verify($pass, $result['password'])) {
-            $_SESSION['id_user'] = $result['id_user'];
-            $_SESSION['id_role'] = $result['id_role'];
+    if ($result && password_verify($pass, $result['password'])) {
 
-            echo json_encode([
-                "status" => "success",
-                "data" => [
-                    "id_user" => $result['id_user'],
-                    "username" => $result['username'],
-                    "id_role" => $result['id_role']
-                ]
-            ]);
-        } else {
-            echo json_encode(["status"=>"error", "message"=>"Usuario o contraseña incorrectos"]);
-        }
-        exit;
+        // Genera un token random y lo guarda en la tabla sessions
+        $token = bin2hex(random_bytes(32));
+        $expira = date('Y-m-d H:i:s', strtotime('+8 hours'));
+
+        $stmtToken = $pdo->prepare("INSERT INTO sessions (token, id_user, expires_at) VALUES (:token, :id_user, :expires_at)");
+        $stmtToken->execute([
+            "token" => $token,
+            "id_user" => $result['id_user'],
+            "expires_at" => $expira
+        ]);
+
+        echo json_encode([
+            "status" => "success",
+            "data" => [
+                "id_user" => $result['id_user'],
+                "username" => $result['username'],
+                "id_role" => $result['id_role'],
+                "role_name" => $result['role_name'],
+                "token" => $token
+            ]
+        ]);
+    } else {
+        echo json_encode(["status"=>"error", "message"=>"Usuario o contraseña incorrectos"]);
+    }
+    exit;
 
     case 'logout':
-        session_destroy();
-        echo json_encode(["status" => "success"]);
-        exit;
-
+    $token = $data['token'] ?? '';
+    if ($token) {
+        $stmt = $pdo->prepare("UPDATE sessions SET expires_at = NOW() WHERE token = :token");
+        $stmt->execute(["token" => $token]);
+    }
+    echo json_encode(["status" => "success"]);
+    exit;
+    
     case 'get_roles':
         $roles = getAllRoles(); 
         echo json_encode(["status" => "success", "data" => $roles]);

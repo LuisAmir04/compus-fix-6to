@@ -2,6 +2,9 @@ const URL = "../php/sales.php";
 
 export async function peticionSal(datos) {
     try {
+        const user = JSON.parse(localStorage.getItem("user_data"));
+        datos.token = user ? user.token : "";
+        
         const respuesta = await fetch(URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
