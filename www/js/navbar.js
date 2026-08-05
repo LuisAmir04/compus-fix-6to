@@ -24,7 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "statuses": [1],           
         "roles": [1],               
         "users": [1],        
-        "sessions": [1]       
+        "sessions": [1],
+        "order_history": [1],
+        "dashboard": [1, 2]       
     };
 
     // 4. VERIFICADOR DE RUTAS (PROTEGER VISTAS)
@@ -51,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let links = '';
     
+    if (permisos["dashboard"].includes(roleId)) links += `<li><a href="../dashboard/">Dashboard</a></li>`;
     if (permisos["repair_orders"].includes(roleId)) links += `<li><a href="../repair_orders/">Órdenes de Reparación</a></li>`;
     if (permisos["sales"].includes(roleId)) links += `<li><a href="../sales/">Ventas</a></li>`;
     if (permisos["roles"].includes(roleId)) links += `<li><a href="../roles/">Roles</a></li>`;
@@ -61,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (permisos["cash_register"].includes(roleId)) links += `<li><a href="../cash_register/">Caja</a></li>`;
     if (permisos["users"].includes(roleId)) links += `<li><a href="../users/">Usuarios</a></li>`;
     if (permisos["sessions"].includes(roleId)) links += `<li><a href="../sessions/">Registro de Sesiones</a></li>`;
+    if (permisos["order_history"].includes(roleId)) links += `<li><a href="../order_history/">Historial de Órdenes</a></li>`;
 
     // 6. RENDERIZAR NAVBAR
     contenedor.innerHTML = `
