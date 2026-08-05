@@ -28,7 +28,7 @@ button.addEventListener("click", e => {
             localStorage.setItem("user_data", JSON.stringify(json.data));
             
             // Redirigimos a la tabla principal
-            window.location.href = "repair_orders/"; 
+            window.location.href = "dashboard/"; 
         } else {
             alert("Credenciales incorrectas.");
         }

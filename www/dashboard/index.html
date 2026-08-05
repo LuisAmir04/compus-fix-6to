@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Dashboard</title>
+</head>
+<body class="p-6 bg-gray-50">
+    <div id="navbar-container"></div>
+
+    <div class="flex items-center justify-between mb-5">
+        <h1 class="text-xl font-bold text-gray-800">Dashboard</h1>
+        <span id="fechaHoy" class="text-sm text-gray-400"></span>
+    </div>
+
+    <!-- Tarjetas compactas: totales + una por cada estado + ventas -->
+    <div id="tarjetas" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Órdenes por tipo de servicio</h2>
+            <div class="h-64"><canvas id="chartServicio"></canvas></div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Órdenes por estado actual</h2>
+            <div class="h-64"><canvas id="chartEstado"></canvas></div>
+        </div>
+
+        <div class="bg-white rounded-lg border border-gray-200 p-4 lg:col-span-2">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Órdenes entregadas por mes</h2>
+            <div class="h-64"><canvas id="chartEntregasMes"></canvas></div>
+        </div>
+
+        <div id="panelVentasDia" class="bg-white rounded-lg border border-gray-200 p-4 lg:col-span-2">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Ventas por día (últimos 30 días)</h2>
+            <div class="h-64"><canvas id="chartVentasDia"></canvas></div>
+        </div>
+
+        <div id="panelMetodoPago" class="bg-white rounded-lg border border-gray-200 p-4">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Ventas por método de pago</h2>
+            <div class="h-64"><canvas id="chartMetodoPago"></canvas></div>
+        </div>
+
+        <!-- Este panel se oculta solo para Técnico desde dashboard.js -->
+        <div id="panelTecnicos" class="bg-white rounded-lg border border-gray-200 p-4">
+            <h2 class="text-sm font-semibold text-gray-600 mb-2">Top 10 técnicos (por órdenes completadas)</h2>
+            <div class="h-64"><canvas id="chartTecnicos"></canvas></div>
+        </div>
+
+    </div>
+
+    <script src="../js/navbar.js"></script>
+    <script type="module" src="../js/dashboard.js"></script>
+</body>
+</html>

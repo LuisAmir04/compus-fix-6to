@@ -548,9 +548,30 @@ function getCashRegisterById($id_cut) {
 
 function insertRepairOrder($post) {
     global $pdo;
-    $sql = "INSERT INTO repair_orders (id_customer, id_device_type, id_service_type, id_user, brand_model, reported_fault, technical_diagnosis, final_price, id_status)
-            VALUES ({$post['id_customer']}, {$post['id_device_type']}, {$post['id_service_type']}, {$post['id_user']}, '{$post['brand_model']}', '{$post['reported_fault']}', '{$post['technical_diagnosis']}', {$post['final_price']}, {$post['id_status']})";
-    return $pdo->exec($sql);
+    
+    $sql = "INSERT INTO repair_orders 
+            (id_customer, id_device_type, id_service_type, id_user, brand_model, reported_fault, technical_diagnosis, final_price, id_status)
+            VALUES (:id_customer, :id_device_type, :id_service_type, :id_user, :brand_model, :reported_fault, :technical_diagnosis, :final_price, :id_status)";
+            
+    $stmt = $pdo->prepare($sql);
+    $ok = $stmt->execute([
+        ':id_customer' => $post['id_customer'],
+        ':id_device_type' => $post['id_device_type'],
+        ':id_service_type' => $post['id_service_type'],
+        ':id_user' => $post['id_user'],
+        ':brand_model' => $post['brand_model'],
+        ':reported_fault' => $post['reported_fault'],
+        ':technical_diagnosis' => $post['technical_diagnosis'],
+        ':final_price' => $post['final_price'],
+        ':id_status' => $post['id_status']
+    ]);
+
+    if ($ok) {
+        $id_order = $pdo->lastInsertId();
+        registrarCambioEstado($id_order, $post['id_status'], $post['id_user']);
+    }
+
+    return $ok;
 }
 
 function getCatalogsForOrder() {
@@ -566,7 +587,14 @@ function getCatalogsForOrder() {
 //Solo para el menú desplegable, trae todos sin paginar
 function getCustomersForCatalog() {
     global $pdo;
-    $stmt = $pdo->query("SELECT id_customer, name FROM customers ORDER BY name ASC");
+    $stmt = $pdo->query("
+        SELECT 
+            id_customer, 
+            name,
+            CONCAT(name, ' - Tel: ', phone, IF(email IS NOT NULL AND email != '', CONCAT(' (', email, ')'), '')) AS display_name
+        FROM customers 
+        ORDER BY name ASC
+    ");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -635,6 +663,11 @@ function getOrderById($id) {
 
 function updateRepairOrderRow($post) {
     global $pdo;
+
+    $stmtActual = $pdo->prepare("SELECT id_status FROM repair_orders WHERE id_order = :id_order");
+    $stmtActual->execute([':id_order' => $post['id_order']]);
+    $ordenActual = $stmtActual->fetch(PDO::FETCH_ASSOC);
+
     $sql = "UPDATE repair_orders SET
             id_customer = :id_customer,
             id_device_type = :id_device_type,
@@ -648,7 +681,7 @@ function updateRepairOrderRow($post) {
             WHERE id_order = :id_order";
             
     $stmt = $pdo->prepare($sql);
-    return $stmt->execute([
+    $ok = $stmt->execute([
         ':id_customer' => $post['id_customer'],
         ':id_device_type' => $post['id_device_type'],
         ':id_service_type' => $post['id_service_type'],
@@ -660,8 +693,14 @@ function updateRepairOrderRow($post) {
         ':id_status' => $post['id_status'],
         ':id_order' => $post['id_order']
     ]);
-}
 
+    // Solo registra en el historial si el estado en verdad cambió
+    if ($ok && $ordenActual && $ordenActual['id_status'] != $post['id_status']) {
+        registrarCambioEstado($post['id_order'], $post['id_status'], $post['id_user']);
+    }
+
+    return $ok;
+}
 function getDeviceTypeById($id) {
     global $pdo;
     $stmt = $pdo->prepare("SELECT * FROM device_types WHERE id_device_type = :id");
@@ -970,6 +1009,185 @@ function getCountSessions($busqueda = '') {
         $stmt->execute([':busqueda' => "%$busqueda%"]);
     } else {
         $sql = "SELECT COUNT(*) as total FROM sessions";
+        $stmt = $pdo->query($sql);
+    }
+
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result['total'];
+}
+
+function registrarCambioEstado($id_order, $id_status, $id_user) {
+    global $pdo;
+    $stmt = $pdo->prepare("INSERT INTO repair_order_status_history (id_order, id_status, id_user) VALUES (:id_order, :id_status, :id_user)");
+    $stmt->execute([
+        ':id_order' => $id_order,
+        ':id_status' => $id_status,
+        ':id_user' => $id_user
+    ]);
+}
+
+function getOrdenesPorServicio() {
+    global $pdo;
+    $sql = "
+        SELECT st.name AS servicio, COUNT(*) AS total
+        FROM repair_orders o
+        INNER JOIN service_types st ON o.id_service_type = st.id_service_type
+        GROUP BY st.name
+        ORDER BY total DESC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getOrdenesPorEstado() {
+    global $pdo;
+    $sql = "
+        SELECT s.name AS estado, COUNT(*) AS total
+        FROM repair_orders o
+        INNER JOIN statuses s ON o.id_status = s.id_status
+        GROUP BY s.name
+        ORDER BY total DESC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getOrdenesEntregadasPorMes() {
+    global $pdo;
+    $sql = "
+        SELECT 
+            DATE_FORMAT(h.changed_at, '%Y-%m') AS mes,
+            COUNT(DISTINCT h.id_order) AS total
+        FROM repair_order_status_history h
+        INNER JOIN statuses s ON h.id_status = s.id_status
+        WHERE s.name = 'Entregado'
+          AND h.changed_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY DATE_FORMAT(h.changed_at, '%Y-%m')
+        ORDER BY mes ASC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getVentasResumenMensual() {
+    global $pdo;
+    $sql = "
+        SELECT
+            SUM(CASE WHEN MONTH(sale_date) = MONTH(CURDATE()) AND YEAR(sale_date) = YEAR(CURDATE()) THEN total_paid ELSE 0 END) AS mes_actual,
+            SUM(CASE WHEN MONTH(sale_date) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(sale_date) = YEAR(CURDATE() - INTERVAL 1 MONTH) THEN total_paid ELSE 0 END) AS mes_pasado
+        FROM sales
+    ";
+    return $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
+}
+
+function getVentasPorDia() {
+    global $pdo;
+    $sql = "
+        SELECT DATE(sale_date) AS dia, SUM(total_paid) AS total
+        FROM sales
+        WHERE sale_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY DATE(sale_date)
+        ORDER BY dia ASC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getVentasPorMetodoPago() {
+    global $pdo;
+    $sql = "
+        SELECT payment_method, COUNT(*) AS cantidad, SUM(total_paid) AS total
+        FROM sales
+        GROUP BY payment_method
+        ORDER BY total DESC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getRendimientoTecnicos() {
+    global $pdo;
+    $sql = "
+        SELECT 
+            u.username AS tecnico,
+            COUNT(o.id_order) AS ordenes_atendidas,
+            SUM(CASE WHEN s.name = 'Entregado' THEN 1 ELSE 0 END) AS ordenes_completadas,
+            COALESCE(SUM(CASE WHEN s.name = 'Entregado' THEN o.final_price ELSE 0 END), 0) AS total_generado
+        FROM users u
+        INNER JOIN repair_orders o ON o.id_user = u.id_user
+        INNER JOIN statuses s ON o.id_status = s.id_status
+        WHERE u.id_role = 2
+        GROUP BY u.username
+        ORDER BY ordenes_completadas DESC
+    ";
+    return $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getTotalOrdenes() {
+    global $pdo;
+    $stmt = $pdo->query("SELECT COUNT(*) AS total FROM repair_orders");
+    return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+}
+
+function getAllOrderHistory($ordenarPor, $direccion, $limite, $offset, $busqueda = '') {
+    global $pdo;
+
+    $ordenarPor = $ordenarPor ?: 'fecha_cambio';
+    $direccion = ($direccion === 'ASC') ? 'ASC' : 'DESC';
+
+    $sql = "
+        SELECT 
+            h.id_order,
+            c.name AS cliente,
+            s.name AS estado,
+            u.username AS tecnico,
+            o.created_at AS fecha_creacion,
+            h.changed_at AS fecha_cambio
+        FROM repair_order_status_history h
+        INNER JOIN repair_orders o ON h.id_order = o.id_order
+        INNER JOIN customers c ON o.id_customer = c.id_customer
+        INNER JOIN statuses s ON h.id_status = s.id_status
+        INNER JOIN users u ON h.id_user = u.id_user
+    ";
+
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE c.name LIKE :busqueda 
+               OR u.username LIKE :busqueda
+               OR DATE_FORMAT(o.created_at, '%Y-%m-%d') LIKE :busqueda
+               OR DATE_FORMAT(h.changed_at, '%Y-%m-%d') LIKE :busqueda
+        ";
+    }
+
+    $sql .= " ORDER BY " . $ordenarPor . " " . $direccion . " LIMIT " . (int)$limite . " OFFSET " . (int)$offset;
+
+    $stmt = $pdo->prepare($sql);
+
+    if ($busqueda !== '') {
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
+        $stmt->execute();
+    }
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getCountOrderHistory($busqueda = '') {
+    global $pdo;
+
+    $sql = "
+        SELECT COUNT(*) as total 
+        FROM repair_order_status_history h
+        INNER JOIN repair_orders o ON h.id_order = o.id_order
+        INNER JOIN customers c ON o.id_customer = c.id_customer
+        INNER JOIN users u ON h.id_user = u.id_user
+    ";
+
+    if ($busqueda !== '') {
+        $sql .= "
+            WHERE c.name LIKE :busqueda 
+               OR u.username LIKE :busqueda
+               OR DATE_FORMAT(o.created_at, '%Y-%m-%d') LIKE :busqueda
+               OR DATE_FORMAT(h.changed_at, '%Y-%m-%d') LIKE :busqueda
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':busqueda' => "%$busqueda%"]);
+    } else {
         $stmt = $pdo->query($sql);
     }
 

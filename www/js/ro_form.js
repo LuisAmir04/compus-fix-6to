@@ -13,7 +13,7 @@ function llenarSelect(formulario, name, items, valueField, textField) {
 export async function cargarCatalogos(form) {
     const json = await enviarPeticion({ action: "get_catalogs" });
     if (json.status === "success") {
-        llenarSelect(form, "id_customer", json.data.customers, "id_customer", "name");
+        llenarSelect(form, "id_customer", json.data.customers, "id_customer", "display_name");
         llenarSelect(form, "id_device_type", json.data.device_types, "id_device_type", "name");
         llenarSelect(form, "id_service_type", json.data.service_types, "id_service_type", "name");
         llenarSelect(form, "id_status", json.data.statuses, "id_status", "name");
